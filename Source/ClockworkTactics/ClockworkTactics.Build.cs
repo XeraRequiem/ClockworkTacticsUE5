@@ -11,13 +11,17 @@ public class ClockworkTactics : ModuleRules
 			"Core",
 			"CoreUObject",
 			"Engine",
-			"InputCore",
-			"HeadMountedDisplay"
+			"InputCore"
+		});
+
+		PrivateDependencyModuleNames.AddRange(new string[] {
+			"OnlineSubsystem"
 		});
 
 		PublicIncludePaths.AddRange(new string[] {
 			Path.Combine(ModuleDirectory, "Core", "Public"),
-			Path.Combine(ModuleDirectory, "Hex", "Public")
+			Path.Combine(ModuleDirectory, "Entity", "Public"),
+			Path.Combine(ModuleDirectory, "Grid", "Public")
 		});
 	}
 }

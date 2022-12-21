@@ -5,10 +5,10 @@ using System.Collections.Generic;
 
 public class ClockworkTacticsTarget : TargetRules
 {
-	public ClockworkTacticsTarget(TargetInfo Target) : base(Target)
+	public ClockworkTacticsTarget( TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.Add("ClockworkTactics");
+		ExtraModuleNames.AddRange( new string[] { "ClockworkTactics" } );
 	}
 }

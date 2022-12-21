@@ -5,10 +5,10 @@ using System.Collections.Generic;
 
 public class ClockworkTacticsEditorTarget : TargetRules
 {
-	public ClockworkTacticsEditorTarget(TargetInfo Target) : base(Target)
+	public ClockworkTacticsEditorTarget( TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.Add("ClockworkTactics");
+		ExtraModuleNames.AddRange( new string[] { "ClockworkTactics" } );
 	}
 }
