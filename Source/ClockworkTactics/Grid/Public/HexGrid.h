@@ -26,7 +26,7 @@ class AHexGrid : public AActor
 	// -------------------------
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Replicated)
+	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AHexTile> HexClass;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -62,7 +62,7 @@ public:
 	// -------------------------
 
 public:
-	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 
 	// -------------------------
@@ -70,7 +70,7 @@ public:
 	// -------------------------
 
 public:
-	UFUNCTION(BlueprintCallable, NetMulticast, Reliable)
+	UFUNCTION(BlueprintCallable, Server, Reliable)
 	void GenerateHexGrid();
 
 
@@ -109,7 +109,7 @@ public:
 	uint8 HexDistanceBetween(const AHexTile* hex1, const AHexTile* hex2) const;
 
 	UFUNCTION(BlueprintCallable)
-	TArray<AHexTile*> GetPathFromTo(AHexTile* start, const AHexTile* target) const;
+	TArray<AHexTile*> GetPathFromTo(AHexTile* start, AHexTile* target) const;
 
 
 	// -------------------------

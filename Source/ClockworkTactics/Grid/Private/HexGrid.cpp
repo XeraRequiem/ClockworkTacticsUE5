@@ -1,6 +1,9 @@
 ﻿// Parent
 #include "HexGrid.h"
 
+// Engine
+#include "Net/UnrealNetwork.h"
+
 // Game
 #include "ClockworkTactics.h"
 
@@ -18,6 +21,22 @@ AHexGrid::AHexGrid() :
 	bDebugMode(true)
 {
 	bReplicates = true;
+}
+
+
+// -------------------------
+// --- Inherited
+// -------------------------
+
+void AHexGrid::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// Replicate Variables
+	DOREPLIFETIME(AHexGrid, GridHexWidth);
+	DOREPLIFETIME(AHexGrid, GridHexDepth);
+	DOREPLIFETIME(AHexGrid, GridHexSpacing);
+	DOREPLIFETIME(AHexGrid, Hexes);
 }
 
 
@@ -241,7 +260,7 @@ uint8 AHexGrid::HexDistanceBetween(const AHexTile* hex1, const AHexTile* hex2) c
 	return FMath::Abs(dy) + FMath::Max(0, (FMath::Abs(dx) - FMath::Abs(dy)) / 2);
 }
 
-TArray<AHexTile*> AHexGrid::GetPathFromTo(AHexTile* start, const AHexTile* target) const
+TArray<AHexTile*> AHexGrid::GetPathFromTo(AHexTile* start, AHexTile* target) const
 {
 	// A* Pathing Algorithm
 
@@ -272,7 +291,7 @@ TArray<AHexTile*> AHexGrid::GetPathFromTo(AHexTile* start, const AHexTile* targe
 		for (AHexTile* neighbor : neighbors)
 		{
 			uint8 distanceFromStart = distanceFromStartMap[hex] + 1;
-			
+
 			float cost = INFINITY;
 			if (DetermineHexPathCost(neighbor, target, distanceFromStart, cost, distanceFromStartMap))
 			{
@@ -293,14 +312,14 @@ TArray<AHexTile*> AHexGrid::GetPathFromTo(AHexTile* start, const AHexTile* targe
 			// No Unprocessed Neighbors
 
 	TArray<AHexTile*> path = TArray<AHexTile*>();
-	path.EmplaceAt(0, start);
+	path.Add(target);
 
 	hex = target;
 	while (hex != nullptr && hex != start)
 	{
 		AHexTile* nextHex = nullptr;
 		float nextHexCost = INFINITY;
-		
+
 		TArray<AHexTile*> neighbors = GetHexNeighbors(hex);
 		for (AHexTile* neighbor : neighbors)
 		{
@@ -317,10 +336,20 @@ TArray<AHexTile*> AHexGrid::GetPathFromTo(AHexTile* start, const AHexTile* targe
 
 		if (nextHex != nullptr && nextHex != start)
 		{
-			path.EmplaceAt(0, nextHex);
+			path.Add(nextHex);
 		}
 
 		hex = nextHex;
+	}
+
+	// Reverse Path
+	for (int i = 0; i < path.Num() / 2; i++)
+	{
+		int swapIndex = path.Num() - 1 - i;
+		AHexTile* temp = path[i];
+
+		path[i] = path[swapIndex];
+		path[swapIndex] = temp;
 	}
 
 	return path;

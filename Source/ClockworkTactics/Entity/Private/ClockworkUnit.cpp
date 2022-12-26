@@ -3,6 +3,7 @@
 
 // Engine
 #include "Components/SceneComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Game
 #include "HexGrid.h"
@@ -30,6 +31,9 @@ AClockworkUnit::AClockworkUnit() :
 	MoveTimeTotal(0.0f)
 {
 	PrimaryActorTick.bCanEverTick = true;
+	
+	SetReplicates(true);
+	SetReplicateMovement(true);
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
 	
@@ -42,12 +46,24 @@ AClockworkUnit::AClockworkUnit() :
 // --- Inherited
 // -------------------------
 
+void AClockworkUnit::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// Replicate Variables
+	DOREPLIFETIME(AClockworkUnit, CurrentHex);
+	DOREPLIFETIME(AClockworkUnit, ReservedHex);
+	DOREPLIFETIME(AClockworkUnit, TargetedUnit);
+	DOREPLIFETIME(AClockworkUnit, TargetedHex);
+	DOREPLIFETIME(AClockworkUnit, bMoving);
+}
+
 void AClockworkUnit::Tick(float dt)
 {
 	// Target Hex-Based Movement
 	if (TargetedHex == nullptr)
 	{
-		TargetHex(CurrentHex->GetOwningGrid()->GetRandomVacantHex());
+		SelectTargetHex_Server();
 	}
 	
 	if (CurrentHex != TargetedHex)
@@ -170,7 +186,7 @@ AHexTile* AClockworkUnit::GetOccupiedHex() const
 // --- Implementation
 // -------------------------
 
-void AClockworkUnit::Move(float dt)
+void AClockworkUnit::Move_Implementation(float dt)
 {
 	if (ReservedHex == nullptr)
 	{
@@ -191,7 +207,7 @@ void AClockworkUnit::Move(float dt)
 	MoveToReservedHex(dt);
 }
 
-void AClockworkUnit::MoveToReservedHex(float dt)
+void AClockworkUnit::MoveToReservedHex_Implementation(float dt)
 {
 	if (ReservedHex != nullptr)
 	{
@@ -212,7 +228,7 @@ void AClockworkUnit::MoveToReservedHex(float dt)
 }
 
 
-TArray<AHexTile*> AClockworkUnit::GetPathToHex(const AHexTile* hex)
+TArray<AHexTile*> AClockworkUnit::GetPathToHex(AHexTile* hex)
 {
 	if (CurrentHex != nullptr)
 	{
@@ -257,6 +273,14 @@ AClockworkUnit* AClockworkUnit::FindClosestEnemyUnit()
 
 	UE_LOG(LogClockwork, Verbose, TEXT("%s Has No Available Enemy Target"), *GetName());
 	return nullptr;
+}
+
+
+void AClockworkUnit::SelectTargetHex_Server_Implementation()
+{
+	AHexTile* hex = CurrentHex->GetOwningGrid()->GetRandomVacantHex();
+
+	TargetHex(hex);
 }
 
 

@@ -45,7 +45,7 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	UStaticMeshComponent* Mesh;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Replicated)
 	USceneComponent* OccupationLocation;
 
 	UPROPERTY(BLueprintReadOnly, EditAnywhere)
@@ -57,10 +57,10 @@ protected:
 	UPROPERTY(BlueprintReadOnly, Replicated)
 	EOccupationStatus OccupationStatus;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	AClockworkUnit* Occupant;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	AHexGrid* OwningGrid;
 
 private:
@@ -91,17 +91,17 @@ public:
 
 public:
 	UFUNCTION(NetMulticast, Reliable)
-	void InitializeTile(AHexGrid* grid);
+	void InitializeTile(AHexGrid* grid, bool bDebug = false);
 
 
-	UFUNCTION()
-	bool Reserve(AClockworkUnit* clockwork);
+	UFUNCTION(Server, Reliable)
+	void Reserve(AClockworkUnit* clockwork);
 
-	UFUNCTION()
-	bool Occupy(AClockworkUnit* clockwork);
+	UFUNCTION(Server, Reliable)
+	void Occupy(AClockworkUnit* clockwork);
 
-	UFUNCTION()
-	bool Vacate(AClockworkUnit* clockwork);
+	UFUNCTION(Server, Reliable)
+	void Vacate(AClockworkUnit* clockwork);
 
 
 	// -------------------------

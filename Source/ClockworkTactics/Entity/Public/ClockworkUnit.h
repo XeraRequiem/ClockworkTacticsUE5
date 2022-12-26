@@ -41,20 +41,20 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	UStaticMeshComponent* Mesh;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	AHexTile* CurrentHex;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	AHexTile* ReservedHex;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	AClockworkUnit* TargetedUnit;
 
 	/* Temp */
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	AHexTile* TargetedHex;
 
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Replicated)
 	bool bMoving;
 
 	/* --------------- Stats --------------- */
@@ -102,6 +102,8 @@ public:
 	// -------------------------
 
 public:
+	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const;
+
 	void Tick(float dt) override;
 
 
@@ -141,20 +143,24 @@ public:
 	// -------------------------
 
 protected:
-	UFUNCTION()
+	UFUNCTION(Server, Reliable)
 	void Move(float dt);
 
-	UFUNCTION(BlueprintCallable)
+	UFUNCTION(Server, Reliable)
 	void MoveToReservedHex(float dt);
 
 	UFUNCTION(BlueprintCallable)
-	TArray<AHexTile*> GetPathToHex(const AHexTile* hex);
+	TArray<AHexTile*> GetPathToHex(AHexTile* hex);
 
 	UFUNCTION(BlueprintCallable)
 	TArray<AHexTile*> GetPathToHexWithinTargetRange();
 
 	UFUNCTION(BlueprintCallable)
 	AClockworkUnit* FindClosestEnemyUnit();
+
+
+	UFUNCTION(Server, Reliable)
+	void SelectTargetHex_Server();
 
 
 	// -------------------------

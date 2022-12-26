@@ -44,6 +44,9 @@ void AHexTile::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifeti
 
 	// Replicate Variables
 	DOREPLIFETIME(AHexTile, OccupationStatus);
+	DOREPLIFETIME(AHexTile, Occupant);
+	DOREPLIFETIME(AHexTile, OwningGrid);
+	DOREPLIFETIME(AHexTile, OccupationLocation);
 }
 
 
@@ -51,14 +54,14 @@ void AHexTile::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifeti
 // --- API
 // -------------------------
 
-void AHexTile::InitializeTile(AHexGrid* grid, bool inDebugMode)
+void AHexTile::InitializeTile_Implementation(AHexGrid* grid, bool bDebug)
 {
 	OwningGrid = grid;
-	bDebugMode = inDebugMode;
+	bDebugMode = bDebug;
 }
 
 
-bool AHexTile::Reserve(AClockworkUnit* clockwork)
+void AHexTile::Reserve_Implementation(AClockworkUnit* clockwork)
 {
 	if (Occupant == nullptr && OccupationStatus == EOccupationStatus::Vacant)
 	{
