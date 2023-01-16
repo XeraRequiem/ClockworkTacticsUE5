@@ -44,6 +44,18 @@ public:
 		Y(inY)
 	{
 	}
+
+
+	// -------------------------
+	// --- API
+	// -------------------------
+
+	 public:
+		  bool IsWithinBounds(uint8 xMax, uint8 yMax)
+		  {
+				return X >= 0 && X <= xMax && Y >= 0 && Y <= yMax;
+		  }
+	 
 };
 
 USTRUCT(BlueprintType)
@@ -205,7 +217,7 @@ class CLOCKWORKTACTICS_API UClockworkTactics_HexLibrary : public UObject
 public:
 	// Neighbors
 	UFUNCTION(BlueprintCallable)
-	static TArray<FOffsetCoordinate> GetNeighborsOfOffsetCoordinate(FOffsetCoordinate coordinate);
+	static TArray<FOffsetCoordinate> GetNeighborsOfOffsetCoordinate(FOffsetCoordinate coordinate, uint8 xMax, uint8 yMax);
 
 	UFUNCTION(BlueprintCallable)
 	static TArray<FDoubledCoordinate> GetNeighborsOfDoubledCoordinate(FDoubledCoordinate coordinate);

@@ -396,7 +396,7 @@ bool AHexGrid::SpawnUnitOnHex(TSubclassOf<AClockworkUnit> clockworkClass, AHexTi
 TArray<AHexTile*> AHexGrid::GetHexNeighbors(const AHexTile* hex) const
 {
 	FOffsetCoordinate coordinate = GetOffsetCoordinateOfHex(hex);
-	TArray<FOffsetCoordinate> neighborCoordinates = UClockworkTactics_HexLibrary::GetNeighborsOfOffsetCoordinate(coordinate);
+	TArray<FOffsetCoordinate> neighborCoordinates = UClockworkTactics_HexLibrary::GetNeighborsOfOffsetCoordinate(coordinate, GridHexWidth - 1, GridHexDepth - 1);
 
 	TArray<AHexTile*> neighbors = TArray<AHexTile*>();
 	for (FOffsetCoordinate neighborCoordinate : neighborCoordinates)

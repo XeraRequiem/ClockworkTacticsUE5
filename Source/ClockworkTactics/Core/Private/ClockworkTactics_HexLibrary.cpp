@@ -3,17 +3,48 @@
 
 // Neighbors
 
-TArray<FOffsetCoordinate> UClockworkTactics_HexLibrary::GetNeighborsOfOffsetCoordinate(FOffsetCoordinate coordinate)
+TArray<FOffsetCoordinate> UClockworkTactics_HexLibrary::GetNeighborsOfOffsetCoordinate(FOffsetCoordinate coordinate, uint8 xMax, uint8 yMax)
 {
     TArray<FOffsetCoordinate> neighbors = TArray<FOffsetCoordinate>();
-    neighbors.Add(FOffsetCoordinate(coordinate.X + 1, coordinate.Y));
-    neighbors.Add(FOffsetCoordinate(coordinate.X - 1, coordinate.Y));
-    neighbors.Add(FOffsetCoordinate(coordinate.X, coordinate.Y - 1));
-    neighbors.Add(FOffsetCoordinate(coordinate.X, coordinate.Y + 1));
+    
+    FOffsetCoordinate neighbor = FOffsetCoordinate();
 
+    neighbor = FOffsetCoordinate(coordinate.X + 1, coordinate.Y);
+    if (neighbor.IsWithinBounds(xMax, yMax))
+    {
+        neighbors.Add(neighbor);
+    }
+
+    neighbor = FOffsetCoordinate(coordinate.X - 1, coordinate.Y);
+    if (neighbor.IsWithinBounds(xMax, yMax))
+    {
+        neighbors.Add(neighbor);
+    }
+
+    neighbor = FOffsetCoordinate(coordinate.X, coordinate.Y - 1);
+    if (neighbor.IsWithinBounds(xMax, yMax))
+    {
+        neighbors.Add(neighbor);
+    }
+    
+    neighbor = FOffsetCoordinate(coordinate.X, coordinate.Y + 1);
+    if (neighbor.IsWithinBounds(xMax, yMax))
+    {
+        neighbors.Add(neighbor);
+    }
+    
     // Diagonal changes based on even vs odd row
-    neighbors.Add(FOffsetCoordinate(coordinate.X - 1 + 2 * (coordinate.Y % 2), coordinate.Y - 1));
-    neighbors.Add(FOffsetCoordinate(coordinate.X - 1 + 2 * (coordinate.Y % 2), coordinate.Y - 1));
+    neighbor = FOffsetCoordinate(coordinate.X - 1 + 2 * (coordinate.Y % 2), coordinate.Y - 1);
+    if (neighbor.IsWithinBounds(xMax, yMax))
+    {
+        neighbors.Add(neighbor);
+    }
+
+    neighbor = FOffsetCoordinate(coordinate.X - 1 + 2 * (coordinate.Y % 2), coordinate.Y + 1);
+    if (neighbor.IsWithinBounds(xMax, yMax))
+    {
+        neighbors.Add(neighbor);
+    }
 
     return neighbors;
 }
