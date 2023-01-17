@@ -28,7 +28,8 @@ AClockworkUnit::AClockworkUnit() :
 	AttackSpeed(0.0f),
 	PhysicalDefense(0.0f),
 	MagicResistance(0.0f),
-	MoveTimeTotal(0.0f)
+	MoveTimeTotal(0.0f),
+	MinJumpHeight(50.0f)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	
@@ -215,8 +216,16 @@ void AClockworkUnit::MoveToReservedHex_Implementation(float dt)
 
 		float percentToTarget = FMath::Clamp(MoveTimeTotal * MoveSpeed, 0.0f, 1.0f);
 		UE_LOG(LogClockwork, Verbose, TEXT("Moving To Reserved Hex %f%"), percentToTarget);
+		
+		FVector curve = JumpCurve->GetVectorValue(percentToTarget);
 
-		FVector location = FMath::Lerp(CurrentHex->GetOccupationLocation(), ReservedHex->GetOccupationLocation(), percentToTarget);
+		FVector start = CurrentHex->GetOccupationLocation();
+		FVector end = ReservedHex->GetOccupationLocation();
+		end.Z = FMath::Max(start.Z, end.Z) + MinJumpHeight;
+
+		FVector delta = end - start;
+		FVector location = start + delta * curve;
+
 		SetActorLocation(location);
 
 		if (percentToTarget == 1.0f)

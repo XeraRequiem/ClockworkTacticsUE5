@@ -1,9 +1,10 @@
 #pragma once
 
 // Engine
-#include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
 #include "Components/StaticMeshComponent.h"
+#include "CoreMinimal.h"
+#include "Curves/CurveVector.h"
+#include "GameFramework/Actor.h"
 
 // Game
 #include "HexTile.h"
@@ -40,6 +41,9 @@ class AClockworkUnit : public AActor
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	UStaticMeshComponent* Mesh;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	UCurveVector* JumpCurve;
 
 	UPROPERTY(BlueprintReadOnly, Replicated)
 	AHexTile* CurrentHex;
@@ -85,6 +89,7 @@ protected:
 
 private:
 	float MoveTimeTotal;
+	float	MinJumpHeight;	
 
 	bool bDebugMode;
 
@@ -171,6 +176,8 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnInitialized(AHexTile* hex);
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnMove();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnHexTargeted(AHexTile* hex);
