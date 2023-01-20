@@ -58,14 +58,16 @@ void AHexGrid::GenerateHexGrid_Implementation()
 		for (int col = 0; col < GridHexWidth; col++)
 		{
 			AHexTile* tile = GetWorld()->SpawnActor<AHexTile>(HexClass);
-			tile->InitializeTile(this, bDebugMode);
 			
 			float posX = (tile->GetMaximalDiameter() * 0.75 + GridHexSpacing) * row;
 			float posY = (tile->GetMinimalDiameter() + GridHexSpacing) * col;
 			posY += (row % 2) * tile->GetMinimalDiameter() * 0.5;
+
+			float height = FMath::RandRange(1, 20);
 			
-			tile->SetActorLocation(FVector(posX, posY, 0));
+			tile->InitializeTile(this, FVector(posX, posY, 0), height, bDebugMode);
 			tile->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
+
 			Hexes.Add(tile);
 		}
 	}

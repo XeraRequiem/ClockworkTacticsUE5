@@ -34,161 +34,182 @@ enum class EOccupationStatus : uint8
 UCLASS()
 class AHexTile : public AActor
 {
-	GENERATED_BODY()
+	 GENERATED_BODY()
 
 
-	// -------------------------
-	// --- Member Variables
-	// -------------------------
+	 // -------------------------
+	 // --- Member Variables
+	 // -------------------------
 
 protected:
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	UStaticMeshComponent* Mesh;
+	 UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Replicated)
+	 UStaticMeshComponent* Mesh;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Replicated)
-	USceneComponent* OccupationLocation;
+	 UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Replicated)
+	 USceneComponent* OccupationLocation;
 
-	UPROPERTY(BLueprintReadOnly, EditAnywhere)
-	float Height;
+	 UPROPERTY(BLueprintReadOnly, ReplicatedUsing=RepNotify_Height)
+	 float Height;
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
-	float DefaultDepth;
+	 UPROPERTY(BlueprintReadOnly, ReplicatedUsing=RepNotify_OccupationStatus)
+	 EOccupationStatus OccupationStatus;
+		  
+	 UPROPERTY(BlueprintReadOnly, Replicated)
+	 AClockworkUnit* Occupant;
 
-	UPROPERTY(BlueprintReadOnly, Replicated)
-	EOccupationStatus OccupationStatus;
+	 UPROPERTY(BlueprintReadOnly, Replicated)
+	 AHexGrid* OwningGrid;
 
-	UPROPERTY(BlueprintReadOnly, Replicated)
-	AClockworkUnit* Occupant;
+	 UPROPERTY(EditDefaultsOnly)
+	 FLinearColor OccupiedColor;
 
-	UPROPERTY(BlueprintReadOnly, Replicated)
-	AHexGrid* OwningGrid;
+	 UPROPERTY(EditDefaultsOnly)
+	 FLinearColor ReservedColor;
+
+	 UPROPERTY(EditDefaultsOnly)
+	 FLinearColor VacantColor;
 
 private:
-	FVector2D Coordinate;
+	 FVector2D Coordinate;
 
-	bool bDebugMode;
-
-
-	// -------------------------
-	// --- Constructors
-	// -------------------------
-
-public:
-	AHexTile();
+	 bool bDebugMode;
 
 
-	// -------------------------
-	// --- Inherited
-	// -------------------------
+	 // -------------------------
+	 // --- Constructors
+	 // -------------------------
 
 public:
-	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
+	 AHexTile();
 
 
-	// -------------------------
-	// --- API
-	// -------------------------
-
-public:
-	UFUNCTION(NetMulticast, Reliable)
-	void InitializeTile(AHexGrid* grid, bool bDebug = false);
-
-
-	UFUNCTION(Server, Reliable)
-	void Reserve(AClockworkUnit* clockwork);
-
-	UFUNCTION(Server, Reliable)
-	void Occupy(AClockworkUnit* clockwork);
-
-	UFUNCTION(Server, Reliable)
-	void Vacate(AClockworkUnit* clockwork);
-
-
-	// -------------------------
-	// --- Const API
-	// -------------------------
+	 // -------------------------
+	 // --- Inherited
+	 // -------------------------
 
 public:
-	UFUNCTION(BlueprintPure)
-	EOccupationStatus GetOccupationStatus() const;
+	 void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
 
 
-	UFUNCTION(BlueprintPure)
-	AClockworkUnit* GetOccupant() const;
-
-	UFUNCTION(BlueprintPure)
-	FVector GetOccupationLocation() const;
-
-
-	UFUNCTION(BlueprintPure)
-	bool IsOccupied() const;
-
-	UFUNCTION(BlueprintPure)
-	bool IsReserved() const;
-
-	UFUNCTION(BlueprintPure)
-	bool IsVacant() const;
-
-
-	UFUNCTION()
-	bool CanBeReservedBy(const AClockworkUnit* clockwork) const;
-
-	UFUNCTION()
-	bool CanBeOccupiedBy(const AClockworkUnit* clockwork) const;
-
-	UFUNCTION()
-	bool CanBeVacatedBy(const AClockworkUnit* clockwork) const;
-
-
-	UFUNCTION(BlueprintPure)
-	AHexGrid* GetOwningGrid() const;
-
-	UFUNCTION(BlueprintPure)
-	FVector2D GetGridCoordinate() const;
-
-
-	UFUNCTION(BlueprintPure)
-	float GetCircumradius() const;
-
-	UFUNCTION(BlueprintPure)
-	float GetInradius() const;
-
-	UFUNCTION(BlueprintPure)
-	float GetMaximalDiameter() const;
-
-	UFUNCTION(BlueprintPure)
-	float GetMinimalDiameter() const;
-
-
-
-	// -------------------------
-	// --- Blueprint Events
-	// -------------------------
+	 // -------------------------
+	 // --- API
+	 // -------------------------
 
 public:
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void SetColorByOccupationStatus();
+	 UFUNCTION(Server, Reliable)
+	 void InitializeTile(AHexGrid* grid, FVector location, float inHeight, bool bDebug = false);
+
+	 UFUNCTION(Server, Reliable)
+	 void SetHeight(float inHeight);
+
+
+	 UFUNCTION(Server, Reliable)
+	 void Reserve(AClockworkUnit* clockwork);
+
+	 UFUNCTION(Server, Reliable)
+	 void Occupy(AClockworkUnit* clockwork);
+
+	 UFUNCTION(Server, Reliable)
+	 void Vacate(AClockworkUnit* clockwork);
+
+
+	 // -------------------------
+	 // --- Const API
+	 // -------------------------
+
+public:
+	 UFUNCTION(BlueprintPure)
+	 EOccupationStatus GetOccupationStatus() const;
+
+
+	 UFUNCTION(BlueprintPure)
+	 AClockworkUnit* GetOccupant() const;
+
+	 UFUNCTION(BlueprintPure)
+	 FVector GetOccupationLocation() const;
+
+
+	 UFUNCTION(BlueprintPure)
+	 bool IsOccupied() const;
+
+	 UFUNCTION(BlueprintPure)
+	 bool IsReserved() const;
+
+	 UFUNCTION(BlueprintPure)
+	 bool IsVacant() const;
+
+
+	 UFUNCTION()
+	 bool CanBeReservedBy(const AClockworkUnit* clockwork) const;
+
+	 UFUNCTION()
+	 bool CanBeOccupiedBy(const AClockworkUnit* clockwork) const;
+
+	 UFUNCTION()
+	 bool CanBeVacatedBy(const AClockworkUnit* clockwork) const;
+
+
+	 UFUNCTION(BlueprintPure)
+	 AHexGrid* GetOwningGrid() const;
+
+	 UFUNCTION(BlueprintPure)
+	 FVector2D GetGridCoordinate() const;
+
+
+	 UFUNCTION(BlueprintPure)
+	 float GetCircumradius() const;
+
+	 UFUNCTION(BlueprintPure)
+	 float GetInradius() const;
+
+	 UFUNCTION(BlueprintPure)
+	 float GetMaximalDiameter() const;
+
+	 UFUNCTION(BlueprintPure)
+	 float GetMinimalDiameter() const;
+
+
+	 // -------------------------
+	 // --- Implementation
+	 // -------------------------
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent)
-	bool OnReserved(AClockworkUnit* clockwork);
+	 UFUNCTION()
+	 void UpdateMeshHeight();
 
-	UFUNCTION(BlueprintImplementableEvent)
-	bool OnOccupied(AClockworkUnit* clockwork);
-
-	UFUNCTION(BlueprintImplementableEvent)
-	bool OnVacated(AClockworkUnit* clockwork);
+	 UFUNCTION()
+	 void SetColorByOccupationStatus();
 
 
-	// -------------------------
-	// --- Debugging
-	// -------------------------
-
-public:
-	UFUNCTION()
-	void Debug_SetText(const FString& text);
+	 // -------------------------
+	 // --- Variable Replication
+	 // -------------------------
 
 protected:
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void Debug_OnTextSet(const FString& text);
+	 UFUNCTION()
+	 void RepNotify_OccupationStatus();
+
+	 UFUNCTION()
+	 void RepNotify_Height();
+
+
+	 // -------------------------
+	 // --- Blueprint Events
+	 // -------------------------
+
+protected:
+	 UFUNCTION(BlueprintImplementableEvent)
+	 void OnSetColor(FLinearColor Color);
+
+	 // -------------------------
+	 // --- Debugging
+	 // -------------------------
+
+public:
+	 UFUNCTION()
+	 void Debug_SetText(const FString& text);
+
+protected:
+	 UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	 void Debug_OnTextSet(const FString& text);
 };

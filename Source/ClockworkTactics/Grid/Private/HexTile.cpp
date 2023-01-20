@@ -20,7 +20,11 @@ AHexTile::AHexTile() :
 	Height(0.5f),
 	OccupationStatus(EOccupationStatus::Vacant),
 	Occupant(nullptr),
-	OwningGrid(nullptr)
+	OwningGrid(nullptr),
+	OccupiedColor(FLinearColor::Red),
+	ReservedColor(FLinearColor::Green),
+	VacantColor(FLinearColor::White)
+
 {
 	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
 	
@@ -28,7 +32,7 @@ AHexTile::AHexTile() :
 	Mesh->SetupAttachment(RootComponent);
 
 	OccupationLocation = CreateDefaultSubobject<USceneComponent>(FName("OccupationSpot"));
-	OccupationLocation->SetupAttachment(Mesh);
+	OccupationLocation->SetupAttachment(Mesh, FName("Socket_TopCenter"));
 
 	bReplicates = true;
 }
@@ -43,10 +47,12 @@ void AHexTile::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifeti
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	// Replicate Variables
+	DOREPLIFETIME(AHexTile, Mesh);
+	DOREPLIFETIME(AHexTile, OccupationLocation);
+	DOREPLIFETIME(AHexTile, Height);
 	DOREPLIFETIME(AHexTile, OccupationStatus);
 	DOREPLIFETIME(AHexTile, Occupant);
 	DOREPLIFETIME(AHexTile, OwningGrid);
-	DOREPLIFETIME(AHexTile, OccupationLocation);
 }
 
 
@@ -54,10 +60,19 @@ void AHexTile::GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifeti
 // --- API
 // -------------------------
 
-void AHexTile::InitializeTile_Implementation(AHexGrid* grid, bool bDebug)
+void AHexTile::InitializeTile_Implementation(AHexGrid* grid, FVector location, float inHeight, bool bDebug = false)
 {
 	OwningGrid = grid;
 	bDebugMode = bDebug;
+
+	SetHeight(inHeight);
+	SetActorLocation(location);
+}
+
+void AHexTile::SetHeight_Implementation (float inHeight)
+{
+	 Height = inHeight;
+	 UpdateMeshHeight();
 }
 
 
@@ -67,7 +82,7 @@ void AHexTile::Reserve_Implementation(AClockworkUnit* clockwork)
 	{
 		Occupant = clockwork;
 		OccupationStatus = EOccupationStatus::Reserved;
-		OnReserved(clockwork);
+		SetColorByOccupationStatus();
 	}
 }
 
@@ -76,7 +91,7 @@ void AHexTile::Occupy_Implementation(AClockworkUnit* clockwork)
 	if (Occupant == clockwork && OccupationStatus == EOccupationStatus::Reserved)
 	{
 		OccupationStatus = EOccupationStatus::Occupied;
-		OnOccupied(clockwork);
+		SetColorByOccupationStatus();
 	}
 }
 
@@ -86,7 +101,7 @@ void AHexTile::Vacate_Implementation(AClockworkUnit* clockwork)
 	{
 		OccupationStatus = EOccupationStatus::Vacant;
 		Occupant = nullptr;
-		OnVacated(clockwork);
+		SetColorByOccupationStatus();
 	}
 }
 
@@ -186,6 +201,51 @@ float AHexTile::GetMaximalDiameter() const
 float AHexTile::GetMinimalDiameter() const
 {
 	return GetInradius() * 2.0f;
+}
+
+
+// -------------------------
+// --- Implementation
+// -------------------------
+
+void AHexTile::UpdateMeshHeight()
+{
+	 if (Mesh != nullptr)
+	 {
+		  Mesh->SetWorldScale3D(FVector(1.0, 1.0, Height));
+		  UE_LOG(LogHex, Log, TEXT("Height Scaled To %f"), Height);
+	 }
+}
+
+void AHexTile::SetColorByOccupationStatus()
+{
+	 if (OccupationStatus == EOccupationStatus::Occupied)
+	 {
+		  OnSetColor(OccupiedColor);
+	 }
+	 else if (OccupationStatus == EOccupationStatus::Reserved)
+	 {
+		  OnSetColor(ReservedColor);
+	 }
+	 else
+	 {
+		  OnSetColor(VacantColor);
+	 }
+}
+
+
+// -------------------------
+// --- Variable Replication
+// -------------------------
+
+void AHexTile::RepNotify_OccupationStatus()
+{
+	 SetColorByOccupationStatus();
+}
+
+void AHexTile::RepNotify_Height()
+{
+	 UpdateMeshHeight();
 }
 
 

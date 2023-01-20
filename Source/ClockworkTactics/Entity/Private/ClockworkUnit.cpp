@@ -210,30 +210,33 @@ void AClockworkUnit::Move_Implementation(float dt)
 
 void AClockworkUnit::MoveToReservedHex_Implementation(float dt)
 {
-	if (ReservedHex != nullptr)
-	{
-		MoveTimeTotal += dt;
+	 if (ReservedHex != nullptr)
+	 {
+		  MoveTimeTotal += dt;
 
-		float percentToTarget = FMath::Clamp(MoveTimeTotal * MoveSpeed, 0.0f, 1.0f);
-		UE_LOG(LogClockwork, Verbose, TEXT("Moving To Reserved Hex %f%"), percentToTarget);
+	 float percentToTarget = FMath::Clamp(MoveTimeTotal * MoveSpeed, 0.0f, 1.0f);
+	 UE_LOG(LogClockwork, Verbose, TEXT("Moving To Reserved Hex %f%"), percentToTarget);
 		
-		FVector curve = JumpCurve->GetVectorValue(percentToTarget);
+	 FVector start = CurrentHex->GetOccupationLocation();
+	 FVector end = ReservedHex->GetOccupationLocation();
 
-		FVector start = CurrentHex->GetOccupationLocation();
-		FVector end = ReservedHex->GetOccupationLocation();
-		end.Z = FMath::Max(start.Z, end.Z) + MinJumpHeight;
+	 FVector modifier = JumpCurve->GetVectorValue(percentToTarget);
 
-		FVector delta = end - start;
-		FVector location = start + delta * curve;
+		
+	 float minZ = percentToTarget < 0.5 ? start.Z : end.Z;
+	 float maxZ = FMath::Max(start.Z, end.Z) + 50;
 
-		SetActorLocation(location);
+	 FVector delta = end - start;
+	 FVector location = FVector(start.X + delta.X * modifier.X, start.Y + delta.Y * modifier.Y, FMath::Lerp<float>(minZ, maxZ, modifier.Z));
 
-		if (percentToTarget == 1.0f)
-		{
-			MoveTimeTotal = 0.0f;
-			OccupyHex(ReservedHex);
-		}
-	}
+	 SetActorLocation(location);
+
+		  if (percentToTarget == 1.0f)
+		  {
+				 MoveTimeTotal = 0.0f;
+				 OccupyHex(ReservedHex);
+		  }
+	 }
 }
 
 
