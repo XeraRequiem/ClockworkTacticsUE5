@@ -1,22 +1,19 @@
 {
-	"FileVersion": 3,
-	"EngineAssociation": "5.1",
-	"Category": "",
-	"Description": "",
-	"Modules": [
-		{
-			"Name": "ClockworkTactics",
-			"Type": "Runtime",
-			"LoadingPhase": "Default"
-		}
-	],
-	"Plugins": [
-		{
-			"Name": "ModelingToolsEditorMode",
-			"Enabled": true,
-			"TargetAllowList": [
-				"Editor"
-			]
-		}
-	]
+  "FileVersion": 3,
+  "EngineAssociation": "5.8",
+  "Category": "",
+  "Description": "",
+  "Modules": [
+  {
+	 "Name": "ClockworkTactics",
+	 "Type": "Runtime",
+	 "LoadingPhase": "Default"
+  }
+  ],
+  "Plugins": [
+	 {
+		"Name": "HexLibrary",
+		"Enabled": true
+	 }
+  ]
 }
