@@ -1,0 +1,9 @@
+﻿EntityId,FriendlyName,IconPath,Passable,Targetable,Destructible
+0,TestEntity0,,TRUE,TRUE,TRUE
+1,TestEntity1,,TRUE,TRUE,FALSE
+2,TestEntity2,,TRUE,FALSE,TRUE
+3,TestEntity3,,TRUE,FALSE,FALSE
+4,TestEntity4,,FALSE,FALSE,FALSE
+5,TestEntity5,,FALSE,FALSE,TRUE
+6,TestEntity6,,FALSE,TRUE,FALSE
+7,TestEntity7,,FALSE,TRUE,TRUE
