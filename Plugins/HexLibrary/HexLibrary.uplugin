@@ -1,0 +1,23 @@
+{
+	 "FileVersion" : 1,
+	 "Version" : 1,
+	 "VersionName" : "1.0",
+	 "FriendlyName" : "Hex Mathematics Library",
+	 "Description" : "A generic mathematical library for hex-grid based games",
+	 "Category" : "Libraries",
+	 "CreatedBy" : "Xera Requiem",
+	 "CreatedByURL" : "",
+	 "DocsURL" : "",
+	 "MarketplaceURL" : "",
+	 "SupportURL" : "",
+	 "EnabledByDefault" : true,
+	 "CanContainContent" : true,
+	 "IsBetaVersion" : false,
+	 "Installed" : false,
+	 "Modules" : [
+	 {
+		  "Name" : "HexLibrary",
+		  "Type" : "Runtime",
+		  "LoadingPhase" : "Default"
+	 }]
+}
