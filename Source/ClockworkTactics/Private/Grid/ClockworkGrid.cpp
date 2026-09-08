@@ -3,7 +3,8 @@
 
 // Game
 #include "Core/ClockworkTactics.h"
-#include "Grid/ClockworkTile.h"
+#include "Grid/ClockworkEntityDestinationComponent.h"
+#include "Grid/ClockworkHex.h"
 
 
 // -------------------------
@@ -11,8 +12,8 @@
 // -------------------------
 
 AClockworkGrid::AClockworkGrid() :
-	DefaultHexClass(AClockworkTile::StaticClass()),
-	Hexes(TArray<AClockworkTile*>())
+	DefaultHexClass(AClockworkHex::StaticClass()),
+	Hexes(TArray<AClockworkHex*>())
 {
 }
 
@@ -21,7 +22,7 @@ AClockworkGrid::AClockworkGrid() :
 // --- Const API
 // -------------------------
 
-AClockworkTile* AClockworkGrid::GetHexAtCoordinate(const FOffsetCoordinate& Coordinate) const
+AClockworkHex* AClockworkGrid::GetHexAtCoordinate(const FOffsetCoordinate& Coordinate) const
 {
 	uint8 index = Coordinate.Y * GridHexWidth + Coordinate.X;
 	if (Hexes.Num() > index)
@@ -32,7 +33,7 @@ AClockworkTile* AClockworkGrid::GetHexAtCoordinate(const FOffsetCoordinate& Coor
 	return nullptr;
 }
 
-AClockworkTile* AClockworkGrid::GetRandomVacantHex() const
+AClockworkHex* AClockworkGrid::GetRandomVacantHex() const
 {
 	if (Hexes.Num() > 0)
 	{
@@ -40,7 +41,7 @@ AClockworkTile* AClockworkGrid::GetRandomVacantHex() const
 		while (!bVacantHex)
 		{
 			int32 index = FMath::RandRange(0, Hexes.Num() - 1);
-			AClockworkTile* Hex = Hexes[index];
+			AClockworkHex* Hex = Hexes[index];
 			if (Hex->GetOccupationStatus() == EOccupationStatus::Vacant)
 			{
 				return Hex;
@@ -51,12 +52,18 @@ AClockworkTile* AClockworkGrid::GetRandomVacantHex() const
 	return nullptr;
 }
 
-uint8 AClockworkGrid::HexDistanceBetween(const AClockworkTile* Hex1, const AClockworkTile* Hex2) const
+TArray<AClockworkHex*> AClockworkGrid::GetDestinationHexes() const
+{
+	return DestinationHexes;
+}
+
+
+uint8 AClockworkGrid::HexDistanceBetween(const AClockworkHex* Hex1, const AClockworkHex* Hex2) const
 {
 	// Hex Distance = |dy| + max(0, (|dx|−|dy|)/2)
 
-	FOffsetCoordinate Hex1Coordinate = Hex1->GetCoordinate();
-	FOffsetCoordinate Hex2Coordinate = Hex2->GetCoordinate();
+	FOffsetCoordinate Hex1Coordinate = Hex1->GetGridCoordinate();
+	FOffsetCoordinate Hex2Coordinate = Hex2->GetGridCoordinate();
 
 	uint8 dx = Hex2Coordinate.X - Hex1Coordinate.X;
 	uint8 dy = Hex2Coordinate.Y - Hex1Coordinate.Y;
@@ -76,19 +83,30 @@ void AClockworkGrid::Initialize(int32 InWidth, int32 InDepth, bool bInVariableHe
 	bVariableHeight = bInVariableHeight;
 }
 
-void AClockworkGrid::InitializeWithLayout(const FString& LayoutFile)
+void AClockworkGrid::InitializeWithLayout(const FString& HexLayoutFile, const FString& EntityLayoutFile)
 {
-	FString Layout;
-	FFileHelper::LoadFileToString(Layout, *FPaths::Combine(LayoutDataPath, LayoutFile));
-	
-	if (Layout.IsEmpty())
+	// Get the layout data for hexes
+	FString HexLayout;
+	FFileHelper::LoadFileToString(HexLayout, *FPaths::Combine(LayoutDataPath, HexLayoutFile));
+
+	if (HexLayout.IsEmpty())
 	{
+		UE_LOG(LogGrid, Warning, TEXT("Failed to load hex layout file: %s"), *HexLayoutFile);
 		return;
 	}
 
+	// Get the layout data for entities
+	FString EntityLayout;
+	FFileHelper::LoadFileToString(EntityLayout, *FPaths::Combine(LayoutDataPath, EntityLayoutFile));
+	
+	if (EntityLayout.IsEmpty())
+	{
+		UE_LOG(LogGrid, Warning, TEXT("Failed to load entity layout file: %s"), *EntityLayoutFile);
+		return;
+	}
 
 	// Clear Existing Hexes
-	for (AClockworkTile* Hex : Hexes)
+	for (AClockworkHex* Hex : Hexes)
 	{
 		Hex->Destroy();
 	}
@@ -96,36 +114,62 @@ void AClockworkGrid::InitializeWithLayout(const FString& LayoutFile)
 	Hexes.Empty();
 
 	// Parse Layout into Rows
-	TArray<FString> Rows;
-	Layout.ParseIntoArrayLines(Rows);
+	TArray<FString> HexRows;
+	HexLayout.ParseIntoArrayLines(HexRows);
 
-	GridHexDepth = Rows.Num();
+	TArray<FString> EntityRows;
+	EntityLayout.ParseIntoArrayLines(EntityRows);
 
-	for (int Row = 0; Row < Rows.Num(); Row++)
+	if (HexRows.Num() != EntityRows.Num())
 	{
-		FString RowLayout = Rows[Row];
-		for (int Col = 0; Col < RowLayout.Len(); Col++)
+		UE_LOG(LogGrid, Warning, TEXT("Hex layout and entity layout files have different number of rows: %s, %s"), *HexLayoutFile, *EntityLayoutFile);
+		return;
+	}
+
+	GridHexDepth = HexRows.Num();
+
+	for (int Row = 0; Row < HexRows.Num(); Row++)
+	{
+		FString HexRowLayout = HexRows[Row];
+		FString EntityRowLayout = EntityRows[Row];
+
+		if (HexRowLayout.Len() != EntityRowLayout.Len())
 		{
-			GridHexWidth= RowLayout.Len();
+			UE_LOG(LogGrid, Warning, TEXT("Hex layout and entity layout files have different number of columns: %s, %s"), *HexLayoutFile, *EntityLayoutFile);
+			return;
+		}
 
-			FString HexChar = FString(1, &RowLayout[Col]);
+		for (int Col = 0; Col < HexRowLayout.Len(); Col++)
+		{
+			GridHexWidth= HexRowLayout.Len();
 
-			if (LayoutEntityClassMap.Contains(HexChar))
+			FString HexChar = FString(1, &HexRowLayout[Col]);
+			FString EntityChar = FString(1, &EntityRowLayout[Col]);
+
+			// Create Tile
+			if (LayoutHexClassMap.Contains(HexChar))
 			{
-				// Create Tile
-				AClockworkTile* Hex = GetWorld()->SpawnActor<AClockworkTile>(DefaultHexClass);
-				Hex->InitializeTile(this, FOffsetCoordinate(Col, Row), bDebugMode);
+				TSubclassOf<AClockworkHex> HexClass = LayoutHexClassMap[HexChar];
+				AClockworkHex* Hex = GetWorld()->SpawnActor<AClockworkHex>(HexClass);
+				Hex->InitializeTile(FOffsetCoordinate(Col, Row), bDebugMode);
 				Hex->SetActorLocation(CalcualteHexLocation(Hex, Col, Row));
 				Hex->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
-
 				Hexes.Add(Hex);
 
-				// Create Entity
-				TSubclassOf<AClockworkHexEntity> HexClass = LayoutEntityClassMap[HexChar];
-
-				if (HexClass != nullptr)
+				if (Hex->GetComponentByClass<UClockworkEntityDestinationComponent>() != nullptr)
 				{
-					SpawnEntityOnHex(HexClass, Hex);
+					DestinationHexes.Add(Hex);
+				}
+
+				// Create Entity
+				if (LayoutEntityClassMap.Contains(EntityChar))
+				{
+					TSubclassOf<AClockworkHexEntity> EntityClass = LayoutEntityClassMap[EntityChar];
+
+					if (EntityClass != nullptr)
+					{
+						SpawnEntityOnHex(EntityClass, Hex);
+					}
 				}
 			}
 		}
@@ -146,7 +190,7 @@ void AClockworkGrid::GenerateGrid()
 	GridHexDepth = (GridHexDepth != 0) ? GridHexDepth : FMath::Rand() % 6 + 1;
 
 	// Clear Existing Hexes
-	for (AClockworkTile* Hex : Hexes)
+	for (AClockworkHex* Hex : Hexes)
 	{
 		Hex->Destroy();
 	}
@@ -157,8 +201,8 @@ void AClockworkGrid::GenerateGrid()
 	{
 		for (int Col = 0; Col < GridHexWidth; Col++)
 		{
-			AClockworkTile* Tile = GetWorld()->SpawnActor<AClockworkTile>(DefaultHexClass);
-			Tile->InitializeTile(this, FOffsetCoordinate(Col, Row), bDebugMode);
+			AClockworkHex* Tile = GetWorld()->SpawnActor<AClockworkHex>(DefaultHexClass);
+			Tile->InitializeTile(FOffsetCoordinate(Col, Row), bDebugMode);
 			Tile->SetActorLocation(CalcualteHexLocation(Tile, Col, Row));
 			Tile->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
 
@@ -173,16 +217,30 @@ void AClockworkGrid::GenerateGrid()
 	}
 }
 
+bool AClockworkGrid::SpawnEntityOnHex(TSubclassOf<AClockworkHexEntity> ClockworkHexEntityClass, AClockworkHex* Hex)
+{
+	if (Hex->GetOccupationStatus() == EOccupationStatus::Vacant)
+	{
+		AClockworkHexEntity* HexEntity = GetWorld()->SpawnActor<AClockworkHexEntity>(ClockworkHexEntityClass);
+		HexEntity->SetActorLocation(Hex->GetOccupationLocation());
+		HexEntity->Initialize(Hex);
 
-TArray<AClockworkTile*> AClockworkGrid::GetPathFromTo(AClockworkTile* Start, AClockworkTile* Target)
+		return true;
+	}
+
+	return false;
+}
+
+
+TArray<AClockworkHex*> AClockworkGrid::GetPathFromTo(AClockworkHex* Start, AClockworkHex* Target)
 {
 	// A* Pathing Algorithm
 
 	// Initialization
-	TMap<const AClockworkTile*, uint8> DistanceFromStartMap;
-	TMap<const AClockworkTile*, float> HexCostMap;
+	TMap<const AClockworkHex*, uint8> DistanceFromStartMap;
+	TMap<const AClockworkHex*, float> HexCostMap;
 
-	for (AClockworkTile* Hex : Hexes)
+	for (AClockworkHex* Hex : Hexes)
 	{
 		DistanceFromStartMap.Add(Hex, 255);
 		HexCostMap.Add(Hex, INFINITY);
@@ -191,18 +249,18 @@ TArray<AClockworkTile*> AClockworkGrid::GetPathFromTo(AClockworkTile* Start, ACl
 	DistanceFromStartMap.Add(Start, 0);
 	HexCostMap.Add(Start, 0);
 
-	TQueue<const AClockworkTile*> HexesToProcess;
+	TQueue<const AClockworkHex*> HexesToProcess;
 	HexesToProcess.Enqueue(Start);
 
 	// Pre-Process Hexes
 		// Determine Hex Costs
 		// Cost = Hex Distance From Start + Linear Distance To Target
 
-	const AClockworkTile* Hex;
+	const AClockworkHex* Hex;
 	while (HexesToProcess.Dequeue(Hex))
 	{
-		TArray<AClockworkTile*> neighbors = GetHexNeighbors(Hex);
-		for (AClockworkTile* neighbor : neighbors)
+		TArray<AClockworkHex*> neighbors = GetHexNeighbors(Hex);
+		for (AClockworkHex* neighbor : neighbors)
 		{
 			uint8 DistanceFromStart = (DistanceFromStartMap.Contains(Hex)) ? DistanceFromStartMap[Hex] + 1 : 255;
 
@@ -225,17 +283,17 @@ TArray<AClockworkTile*> AClockworkGrid::GetPathFromTo(AClockworkTile* Start, ACl
 			// Reached Target
 			// No Unprocessed Neighbors
 
-	TArray<AClockworkTile*> path = TArray<AClockworkTile*>();
+	TArray<AClockworkHex*> path = TArray<AClockworkHex*>();
 	path.EmplaceAt(0, Target);
 
 	Hex = Target;
 	while (Hex != nullptr && Hex != Start)
 	{
-		AClockworkTile* nextHex = nullptr;
+		AClockworkHex* nextHex = nullptr;
 		float nextHexCost = INFINITY;
 
-		TArray<AClockworkTile*> neighbors = GetHexNeighbors(Hex);
-		for (AClockworkTile* neighbor : neighbors)
+		TArray<AClockworkHex*> neighbors = GetHexNeighbors(Hex);
+		for (AClockworkHex* neighbor : neighbors)
 		{
 			if (!path.Contains(neighbor))
 			{
@@ -259,10 +317,10 @@ TArray<AClockworkTile*> AClockworkGrid::GetPathFromTo(AClockworkTile* Start, ACl
 	return path;
 }
 
-TArray<AClockworkTile*> AClockworkGrid::BidirectionalPathSearch(AClockworkTile* StartHex, AClockworkTile* TargetHex)
+TArray<AClockworkHex*> AClockworkGrid::BidirectionalPathSearch(AClockworkHex* StartHex, AClockworkHex* TargetHex)
 {
 	//To-Do
-	return TArray<AClockworkTile*>();
+	return TArray<AClockworkHex*>();
 }
 
 
@@ -278,25 +336,11 @@ void AClockworkGrid::SpawnEntityOnRandomHex(TSubclassOf<AClockworkHexEntity> Clo
 		while (!bSpawned)
 		{
 			int32 index = FMath::RandRange(0, Hexes.Num() - 1);
-			AClockworkTile* spawnHex = Hexes[index];
+			AClockworkHex* spawnHex = Hexes[index];
 
 			bSpawned = SpawnEntityOnHex(ClockworkHexEntityClass, spawnHex);
 		}
 	}
-}
-
-bool AClockworkGrid::SpawnEntityOnHex(TSubclassOf<AClockworkHexEntity> ClockworkHexEntityClass, AClockworkTile* Hex)
-{
-	if (Hex->GetOccupationStatus() == EOccupationStatus::Vacant)
-	{
-		AClockworkHexEntity* HexEntity = GetWorld()->SpawnActor<AClockworkHexEntity>(ClockworkHexEntityClass);
-		HexEntity->SetActorLocation(Hex->GetOccupationLocation());
-		HexEntity->Initialize(Hex);
-
-		return true;
-	}
-
-	return false;
 }
 
 
@@ -304,7 +348,7 @@ bool AClockworkGrid::SpawnEntityOnHex(TSubclassOf<AClockworkHexEntity> Clockwork
 // --- Const Implementation
 // -------------------------
 
-AClockworkTile* AClockworkGrid::GetHexAt(const FOffsetCoordinate& Coordinate) const
+AClockworkHex* AClockworkGrid::GetHexAt(const FOffsetCoordinate& Coordinate) const
 {
 	uint8 index = Coordinate.X + Coordinate.Y * GridHexWidth;
 
@@ -316,15 +360,15 @@ AClockworkTile* AClockworkGrid::GetHexAt(const FOffsetCoordinate& Coordinate) co
 	return nullptr;
 }
 
-TArray<AClockworkTile*> AClockworkGrid::GetHexNeighbors(const AClockworkTile* Hex) const
+TArray<AClockworkHex*> AClockworkGrid::GetHexNeighbors(const AClockworkHex* Hex) const
 {
-	FOffsetCoordinate Coordinate = Hex->GetCoordinate();
+	FOffsetCoordinate Coordinate = Hex->GetGridCoordinate();
 	TArray<FOffsetCoordinate> NeighborCoordinates = UHexMath::GetNeighborsOfOffsetCoordinate(Coordinate);
 
-	TArray<AClockworkTile*> Neighbors = TArray<AClockworkTile*>();
+	TArray<AClockworkHex*> Neighbors = TArray<AClockworkHex*>();
 	for (FOffsetCoordinate NeighborCoordinate : NeighborCoordinates)
 	{
-		AClockworkTile* Neighbor = GetHexAtCoordinate(NeighborCoordinate);
+		AClockworkHex* Neighbor = GetHexAtCoordinate(NeighborCoordinate);
 		if (Neighbor != nullptr)
 		{
 			Neighbors.Add(Neighbor);
@@ -335,7 +379,7 @@ TArray<AClockworkTile*> AClockworkGrid::GetHexNeighbors(const AClockworkTile* He
 }
 
 
-FVector AClockworkGrid::CalcualteHexLocation(const AClockworkTile* Hex, int Column, int Row) const
+FVector AClockworkGrid::CalcualteHexLocation(const AClockworkHex* Hex, int Column, int Row) const
 {
 	if (Hex != nullptr)
 	{
@@ -349,7 +393,7 @@ FVector AClockworkGrid::CalcualteHexLocation(const AClockworkTile* Hex, int Colu
 	return FVector();
 }
 
-bool AClockworkGrid::DetermineHexPathCost(AClockworkTile* Hex, const AClockworkTile* Target, uint8 StartDistance, float& OutCost, const TMap<const AClockworkTile*, uint8>& HexDistanceMap) const
+bool AClockworkGrid::DetermineHexPathCost(AClockworkHex* Hex, const AClockworkHex* Target, uint8 StartDistance, float& OutCost, const TMap<const AClockworkHex*, uint8>& HexDistanceMap) const
 {
 	if (Hex != nullptr && Target != nullptr && Hex->IsVacant() && StartDistance < HexDistanceMap[Hex])
 	{
@@ -371,7 +415,7 @@ void AClockworkGrid::Debug_DrawHexCoordinates()
 {
 	UE_LOG(LogHex, Log, TEXT("Debug_DrawHexCoordinates"));
 
-	for (AClockworkTile* Hex : Hexes)
+	for (AClockworkHex* Hex : Hexes)
 	{
 		Hex->Debug_DrawCoordinates();
 	}
@@ -379,10 +423,10 @@ void AClockworkGrid::Debug_DrawHexCoordinates()
 
 void AClockworkGrid::Debug_UpdateHexDistanceFrom(AClockworkHexEntity* ClockworkHexEntity)
 {
-	//AClockworkTile* Hex = ClockworkHexEntity->GetOccupiedHex();
+	//AClockworkHex* Hex = ClockworkHexEntity->GetOccupiedHex();
 	//if (clockworkHex != nullptr)
 	//{
-	//	for (AClockworkTile* Hex : Hexes)
+	//	for (AClockworkHex* Hex : Hexes)
 	//	{
 	//		Hex->Debug_SetText(FString::FromInt(HexDistanceBetween(clockworkHex, Hex)));
 	//	}
