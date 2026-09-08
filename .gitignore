@@ -3,6 +3,10 @@
 *.vsconfig
 *.slnx
 
+# Local Non-Game Content (Temp)
+Content/KayKit*
+Content/Starter*
+
 # Compiled Object files
 *.slo
 *.lo
