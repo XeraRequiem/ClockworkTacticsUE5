@@ -7,13 +7,12 @@
 
 // Plugin
 #include "Core/HexMath.h"
+
+// Game
 #include "Entity/ClockworkHexEntity.h"
-#include "Grid/ClockworkGrid.h"
 
 // Generated
-#include "ClockworkTile.generated.h"
-
-class AClockworkGrid;
+#include "ClockworkHex.generated.h"
 
 
 // -------------------------
@@ -37,7 +36,7 @@ enum class EOccupationStatus : uint8
 * Horizonal Row Oriented Hexagonal Tile
 */
 UCLASS()
-class  AClockworkTile : public AActor
+class  AClockworkHex : public AActor
 {
 	GENERATED_BODY()
 
@@ -47,29 +46,33 @@ class  AClockworkTile : public AActor
 	// -------------------------
 
 protected:
+	// Components
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
-	TObjectPtr<UStaticMeshComponent> Mesh;
+	TObjectPtr<UStaticMeshComponent> HexMesh;
 
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TObjectPtr<USceneComponent> OccupationLocation;
 
-	UPROPERTY(BLueprintReadOnly, EditAnywhere)
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	float Height{ 1.0 };
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
-	float DefaultDepth{ 1.0 };
+	// Occupation
 
 	UPROPERTY(BlueprintReadOnly)
-	EOccupationStatus OccupationStatus;
+	EOccupationStatus OccupationStatus { EOccupationStatus::Vacant };
 
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<AClockworkHexEntity> Occupant;
 
-	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<AClockworkGrid> OwningGrid;
+	// Grid
 
 	UPROPERTY(BlueprintReadOnly)
 	FOffsetCoordinate Coordinate;
+
+	// Debug
+
+	UPROPERTY(BlueprintReadOnly)
+	FString FriendlyName;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool bDebugMode;
@@ -80,15 +83,7 @@ protected:
 	// -------------------------
 
 public:
-	AClockworkTile();
-
-
-	// -------------------------
-	// --- Inherited
-	// -------------------------
-
-public:
-	void GetLifetimeReplicatedProps(TArray< FLifetimeProperty >& OutLifetimeProps) const override;
+	AClockworkHex();
 
 
 	// -------------------------
@@ -97,7 +92,7 @@ public:
 
 public:
 	UFUNCTION()
-	void InitializeTile(AClockworkGrid* InGrid, FOffsetCoordinate InCoordinate, bool bInDebugMode);
+	void InitializeTile(FOffsetCoordinate InCoordinate, bool bInDebugMode = false);
 
 
 	UFUNCTION()
@@ -115,19 +110,10 @@ public:
 	// -------------------------
 
 public:
+	// Occupation Status Queries
+
 	UFUNCTION(BlueprintPure)
 	EOccupationStatus GetOccupationStatus() const;
-
-	UFUNCTION(BlueprintPure)
-	AClockworkHexEntity* GetOccupant() const;
-
-	UFUNCTION(BlueprintPure)
-	FVector GetOccupationLocation() const;
-
-
-	UFUNCTION(BlueprintPure)
-	FOffsetCoordinate GetCoordinate() const;
-
 
 	UFUNCTION(BlueprintPure)
 	bool IsOccupied() const;
@@ -138,7 +124,14 @@ public:
 	UFUNCTION(BlueprintPure)
 	bool IsVacant() const;
 
-		
+	// Occupant Queries
+	
+	UFUNCTION(BlueprintPure)
+	AClockworkHexEntity* GetOccupant() const;
+
+	UFUNCTION(BlueprintPure)
+	FVector GetOccupationLocation() const;
+
 	UFUNCTION()
 	bool CanBeReservedBy(const AClockworkHexEntity* Actor) const;
 
@@ -148,13 +141,12 @@ public:
 	UFUNCTION()
 	bool CanBeVacatedBy(const AClockworkHexEntity* Actor) const;
 
-
-	UFUNCTION(BlueprintPure)
-	AClockworkGrid* GetOwningGrid() const;
+	// Grid Queries
 
 	UFUNCTION(BlueprintPure)
 	FOffsetCoordinate GetGridCoordinate() const;
 
+	// Geometric Queries
 
 	UFUNCTION(BlueprintPure)
 	float GetCircumradius() const;
@@ -168,14 +160,14 @@ public:
 	UFUNCTION(BlueprintPure)
 	float GetMinimalDiameter() const;
 
+	// Debug
+
+	UFUNCTION(BlueprintPure)
+	FString GetFriendlyName() const;
 
 	// -------------------------
 	// --- Blueprint Events
 	// -------------------------
-
-public:
-	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void SetColorByOccupationStatus();
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
