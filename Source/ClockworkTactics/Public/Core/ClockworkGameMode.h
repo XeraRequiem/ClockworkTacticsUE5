@@ -48,6 +48,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	FString GridLayoutFile;
 
+	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
+	FString EntityLayoutFile;
+
 
 	//-------------------------
 	// Constructor

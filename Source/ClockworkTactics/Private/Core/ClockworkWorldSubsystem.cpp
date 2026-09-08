@@ -62,9 +62,9 @@ void UClockworkWorldSubsystem::GenerateHexGrid()
 
 			HexGrid = GetWorld()->SpawnActor<AClockworkGrid>(GridClass, GridSpawnTransform, SpawnParams);
 			
-			if (GameMode->bGenerateGridFromLayoutFile && !GameMode->GridLayoutFile.IsEmpty())
+			if (GameMode->bGenerateGridFromLayoutFile && !GameMode->GridLayoutFile.IsEmpty() && !GameMode->EntityLayoutFile.IsEmpty())
 			{
-				HexGrid->InitializeWithLayout(GameMode->GridLayoutFile);
+				HexGrid->InitializeWithLayout(GameMode->GridLayoutFile, GameMode->EntityLayoutFile);
 			}
 			else
 			{
