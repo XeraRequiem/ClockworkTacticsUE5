@@ -59,7 +59,7 @@ uint8 AClockworkGrid::HexDistanceBetween(const AClockworkTile* Hex1, const ACloc
 	FOffsetCoordinate Hex2Coordinate = Hex2->GetCoordinate();
 
 	uint8 dx = Hex2Coordinate.X - Hex1Coordinate.X;
-	uint8 dy = Hex2Coordinate.Y - Hex2Coordinate.Y;
+	uint8 dy = Hex2Coordinate.Y - Hex1Coordinate.Y;
 
 	return FMath::Abs(dy) + FMath::Max(0, (FMath::Abs(dx) - FMath::Abs(dy)) / 2);
 }
