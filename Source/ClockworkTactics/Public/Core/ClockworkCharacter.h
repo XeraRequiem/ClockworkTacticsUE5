@@ -26,6 +26,18 @@ public:
 	 UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Input)
 	 float TurnRateGamepad;
 
+	 /** Maximum distance camera can be from pawn */
+	 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Input)
+	 float MaxCameraDistance{ 250.0f };
+
+	 /** Minimum distance camera can be from pawn */
+	 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Input)
+	 float MinCameraDistance{ 50.0f };
+
+	 /** Rate at which to zoom in/out */
+	 UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Input)
+	 float ZoomInRate{ 5.0f };
+
 private:
 	 /** Camera boom positioning the camera behind the character */
 	 UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -41,7 +53,7 @@ private:
 	 //-------------------------
 
 public:
-	AClockworkCharacter();
+	AClockworkCharacter(); 
 
 
 	 //-------------------------
@@ -70,16 +82,24 @@ protected:
 	 */
 	void MoveRight(float Value);
 
-	/** 
-	 * Called via input to turn at a given rate. 
-	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
-	 */
-	void TurnAtRate(float Rate);
 
 	/**
-	 * Called via input to turn look up/down at a given rate. 
-	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
+	 * Called for camera zoom in input
+	 * @param Rate	Scaled distance to move in/out
 	 */
-	void LookUpAtRate(float Rate);
+	void ZoomIn();
+
+	/**
+	 * Called for camera zoom out input
+	 * @param Rate	Scaled distance to move in/out
+	 */
+
+	void ZoomOut();
+
+	/**
+	 * Called for camera zoom out input
+	 * @param Rate	Scaled distance to move in/out
+	 */
+	void Zoom(float Value);
 };
 
