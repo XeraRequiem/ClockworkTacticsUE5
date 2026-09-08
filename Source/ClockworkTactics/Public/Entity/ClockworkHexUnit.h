@@ -77,10 +77,10 @@ protected:
 	// -------------------- Hexes -------------------- //
 		
 	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<AClockworkTile> TargetedHex;
+	TObjectPtr<AClockworkHex> TargetedHex;
 
 	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<AClockworkTile> ReservedHex;
+	TObjectPtr<AClockworkHex> ReservedHex;
 
 	// -------------------- Movement -------------------- //
 
@@ -108,12 +108,13 @@ public:
 	// -------------------------
 
 public:
+	virtual void Initialize(AClockworkHex* Hex) override;
 	virtual void Tick(float dt) override;
 
 	virtual void ParseJsonData(const TSharedPtr<FJsonObject>& EntityJson) override;
 	virtual void ParseTableData() override;
 
-	bool OccupyHex(AClockworkTile* Hex) override;
+	bool OccupyHex(AClockworkHex* Hex) override;
 
 
 	// -------------------------
@@ -122,10 +123,10 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable)
-	AClockworkTile* GetTargetHex() const;
+	AClockworkHex* GetTargetHex() const;
 
 	UFUNCTION(BlueprintCallable)
-	AClockworkTile* GetReservedHex() const;
+	AClockworkHex* GetReservedHex() const;
 
 
 	// -------------------------
@@ -134,13 +135,13 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable)
-	bool TargetHex(AClockworkTile* Hex);
+	bool TargetHex(AClockworkHex* Hex);
 	
 	UFUNCTION(BlueprintCallable)
-	bool VacateHex(AClockworkTile* Hex);
+	bool VacateHex(AClockworkHex* Hex);
 	
 	UFUNCTION(BlueprintCallable)
-	bool ReserveHex(AClockworkTile* Hex);
+	bool ReserveHex(AClockworkHex* Hex);
 
 
 	// -------------------------
@@ -151,8 +152,10 @@ protected:
 	void Move(float dt);
 	void MoveToReservedHex(float dt);
 
-	TArray<AClockworkTile*> GetPathToHexWithinTargetRange();
-	TArray<AClockworkTile*> GetPathToHex(AClockworkTile* Hex);
+	TArray<AClockworkHex*> GetPathToHexWithinTargetRange();
+	TArray<AClockworkHex*> GetPathToHex(AClockworkHex* Hex);
+
+	void ReachedTargetHex();
 
 
 	// -------------------------
@@ -161,16 +164,16 @@ protected:
 
 protected:
 	UFUNCTION()
-	void HandleHexTargeted(AClockworkTile* Hex);
+	void HandleHexTargeted(AClockworkHex* Hex);
 	
 	UFUNCTION()
-	void HandleHexVacated(AClockworkTile* Hex);
+	void HandleHexVacated(AClockworkHex* Hex);
 	
 	UFUNCTION()
-	void HandleHexReserved(AClockworkTile* Hex);
+	void HandleHexReserved(AClockworkHex* Hex);
 	
 	UFUNCTION()
-	void HandleHexOccupied(AClockworkTile* Hex);
+	void HandleHexOccupied(AClockworkHex* Hex);
 
 
 	// -------------------------
@@ -179,14 +182,14 @@ protected:
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnHexTargeted(AClockworkTile* Hex);
+	void OnHexTargeted(AClockworkHex* Hex);
 	
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnHexVacated(AClockworkTile* Hex);
+	void OnHexVacated(AClockworkHex* Hex);
 	
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnHexReserved(AClockworkTile* Hex);
+	void OnHexReserved(AClockworkHex* Hex);
 	
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnHexOccupied(AClockworkTile* Hex);
+	void OnHexOccupied(AClockworkHex* Hex);
 };

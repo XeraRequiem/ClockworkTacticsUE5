@@ -6,7 +6,7 @@
 #include "Core/ClockworkTactics.h"
 #include "Core/ClockworkWorldSubsystem.h"
 #include "Entity/ClockworkHexEntityFactory.h"
-#include "Grid/ClockworkTile.h"
+#include "Grid/ClockworkHex.h"
 
 
 // -------------------------
@@ -28,7 +28,7 @@ AClockworkHexEntity::AClockworkHexEntity() :
 // --- API
 // -------------------------
 
-void AClockworkHexEntity::Initialize(AClockworkTile* Hex)
+void AClockworkHexEntity::Initialize(AClockworkHex* Hex)
 {
 	EntityGuid = FGuid::NewGuid();
 
@@ -46,7 +46,7 @@ void AClockworkHexEntity::InitializeFromData(int32 InEntityId, const FOffsetCoor
 	UClockworkWorldSubsystem* WorldSubsystem = GetWorld()->GetSubsystem<UClockworkWorldSubsystem>();
 	if (WorldSubsystem != nullptr)
 	{
-		AClockworkTile* Hex = WorldSubsystem->GetHexGrid()->GetHexAtCoordinate(InLocation);
+		AClockworkHex* Hex = WorldSubsystem->GetHexGrid()->GetHexAtCoordinate(InLocation);
 		if (Hex != nullptr)
 		{
 			HexToOccupy = Hex;
@@ -70,7 +70,7 @@ void AClockworkHexEntity::OccupyPendingTile()
 	}
 }
 
-bool AClockworkHexEntity::OccupyHex(AClockworkTile* Hex)
+bool AClockworkHexEntity::OccupyHex(AClockworkHex* Hex)
 {
 	if (Hex->CanBeOccupiedBy(this))
 	{
@@ -98,7 +98,7 @@ FString AClockworkHexEntity::SerializeEntityData() const
 	 return SerializedData;
 }
 
-AClockworkTile* AClockworkHexEntity::GetOccupiedHex() const
+AClockworkHex* AClockworkHexEntity::GetOccupiedHex() const
 {
 	return OccupiedHex;
 }

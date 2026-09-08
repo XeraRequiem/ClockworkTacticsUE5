@@ -4,9 +4,10 @@
 // Game
 #include "Core/ClockworkGameInstance.h"
 #include "Core/ClockworkTactics.h"
+#include "Core/ClockworkWorldSubsystem.h"
 #include "Entity/ClockworkHexEntityFactory.h"
 #include "Grid/ClockworkGrid.h"
-#include "Grid/ClockworkTile.h"
+#include "Grid/ClockworkHex.h"
 
 
 // -------------------------
@@ -24,29 +25,36 @@ AClockworkHexUnit::AClockworkHexUnit() :
 // --- Inherited
 // -------------------------
 
-void AClockworkHexUnit::Tick(float dt)
+void AClockworkHexUnit::Initialize(AClockworkHex* Hex)
 {
-	// Target Hex-Based Movement
-	if (TargetedHex == nullptr && OccupiedHex != nullptr)
+	Super::Initialize(Hex);
+
+	AClockworkGrid* Grid = GetWorld()->GetSubsystem<UClockworkWorldSubsystem>()->GetHexGrid();
+	if (Grid != nullptr)
 	{
-		AClockworkGrid* Grid = OccupiedHex->GetOwningGrid();
-		if (Grid != nullptr)
+		TArray<AClockworkHex*> Destinations = Grid->GetDestinationHexes();
+		if (Destinations.Num() > 0)
 		{
-			TargetedHex = Grid->GetRandomVacantHex();
-			UE_LOG(LogHex, Verbose, TEXT("%s Targeted Hex %s"), *FriendlyName, *TargetedHex->GetCoordinate().ToString());
+			int32 Index = FMath::RandRange(0, Destinations.Num() - 1);
+			TargetedHex = Destinations[Index];
+			UE_LOG(LogHex, Verbose, TEXT("%s Targeted Hex %s"), *FriendlyName, *TargetedHex->GetFriendlyName());
 		}
 	}
+}
 
+void AClockworkHexUnit::Tick(float dt)
+{
+	Super::Tick(dt);
+
+	// Target Hex-Based Movement
 	if (OccupiedHex != TargetedHex)
 	{
 		Move(dt);
 	}
 	else
 	{
-		TargetedHex = nullptr;
+		ReachedTargetHex();
 	}
-
-	Super::Tick(dt);
 }
 
 
@@ -80,7 +88,7 @@ void AClockworkHexUnit::ParseTableData()
 }
 
 
-bool AClockworkHexUnit::OccupyHex(AClockworkTile* Hex)
+bool AClockworkHexUnit::OccupyHex(AClockworkHex* Hex)
 {
 	if (Hex != nullptr)
 	{
@@ -97,11 +105,11 @@ bool AClockworkHexUnit::OccupyHex(AClockworkTile* Hex)
 
 			HandleHexOccupied(Hex);
 
-			UE_LOG(LogHex, Verbose, TEXT("%s Occupied Hex %s"), *FriendlyName, *Hex->GetCoordinate().ToString());
+			UE_LOG(LogHex, Verbose, TEXT("%s Occupied Hex %s"), *FriendlyName, *Hex->GetFriendlyName());
 			return true;
 		}
 
-		UE_LOG(LogHex, Verbose, TEXT("%s Failed To Occupied Hex %s: Hex Can't be Occupied By This Unit"), *FriendlyName, *Hex->GetCoordinate().ToString());
+		UE_LOG(LogHex, Verbose, TEXT("%s Failed To Occupied Hex %s: Hex Can't be Occupied By This Unit"), *FriendlyName, *Hex->GetFriendlyName());
 		return false;
 	}
 
@@ -114,12 +122,12 @@ bool AClockworkHexUnit::OccupyHex(AClockworkTile* Hex)
 // --- Const API
 // -------------------------
 
-AClockworkTile* AClockworkHexUnit::GetTargetHex() const
+AClockworkHex* AClockworkHexUnit::GetTargetHex() const
 {
 	return TargetedHex;
 }
 
-AClockworkTile* AClockworkHexUnit::GetReservedHex() const
+AClockworkHex* AClockworkHexUnit::GetReservedHex() const
 {
 	return ReservedHex;
 }
@@ -129,7 +137,7 @@ AClockworkTile* AClockworkHexUnit::GetReservedHex() const
 // --- API
 // -------------------------
 
-bool AClockworkHexUnit::TargetHex(AClockworkTile* Hex)
+bool AClockworkHexUnit::TargetHex(AClockworkHex* Hex)
 {
 	UE_LOG(LogHex, Verbose, TEXT("%s Selecting New Target Hex..."), *FriendlyName);
 	if (Hex != nullptr)
@@ -146,7 +154,7 @@ bool AClockworkHexUnit::TargetHex(AClockworkTile* Hex)
 	return false;
 }
 
-bool AClockworkHexUnit::VacateHex(AClockworkTile* Hex)
+bool AClockworkHexUnit::VacateHex(AClockworkHex* Hex)
 {
 	UE_LOG(LogHex, Verbose, TEXT("%s Vacating Hex..."), *FriendlyName);
 	if (Hex != nullptr && Hex->CanBeVacatedBy(this))
@@ -164,7 +172,7 @@ bool AClockworkHexUnit::VacateHex(AClockworkTile* Hex)
 	return false;
 }
 
-bool AClockworkHexUnit::ReserveHex(AClockworkTile* Hex)
+bool AClockworkHexUnit::ReserveHex(AClockworkHex* Hex)
 {
 	UE_LOG(LogHex, Verbose, TEXT("%s Reserving Hex..."), *FriendlyName);
 	if (Hex != nullptr && Hex->CanBeReservedBy(this))
@@ -192,16 +200,11 @@ void AClockworkHexUnit::Move(float dt)
 {
 	if (ReservedHex == nullptr)
 	{
-		TArray<AClockworkTile*> Path = GetPathToHex(TargetedHex);
+		TArray<AClockworkHex*> Path = GetPathToHex(TargetedHex);
 		if (Path.Num() > 0)
 		{
-			AClockworkTile* Hex = Path[0];
+			AClockworkHex* Hex = Path[0];
 			ReserveHex(Hex);
-
-			if (EntityData.bDebugMode)
-			{
-				Hex->GetOwningGrid()->Debug_UpdateHexDistanceFrom(this);
-			}
 		}
 	}
 
@@ -229,25 +232,33 @@ void AClockworkHexUnit::MoveToReservedHex(float dt)
 }
 
 
-TArray<AClockworkTile*> AClockworkHexUnit::GetPathToHexWithinTargetRange()
+TArray<AClockworkHex*> AClockworkHexUnit::GetPathToHexWithinTargetRange()
 {
 	// To-Do
 
-	return TArray<AClockworkTile*>();
+	return TArray<AClockworkHex*>();
 }
 
-TArray<AClockworkTile*> AClockworkHexUnit::GetPathToHex(AClockworkTile* Hex)
+TArray<AClockworkHex*> AClockworkHexUnit::GetPathToHex(AClockworkHex* Hex)
 {
 	if (OccupiedHex != nullptr && Hex != nullptr)
 	{
-		AClockworkGrid* Grid = OccupiedHex->GetOwningGrid();
+		AClockworkGrid* Grid = GetWorld()->GetSubsystem<UClockworkWorldSubsystem>()->GetHexGrid();
 		if (Grid != nullptr)
 		{
 			return Grid->GetPathFromTo(OccupiedHex, Hex);
 		}
 	}
 
-	return TArray<AClockworkTile*>();
+	return TArray<AClockworkHex*>();
+}
+
+
+void AClockworkHexUnit::ReachedTargetHex()
+{
+	VacateHex(OccupiedHex);
+
+	Destroy();
 }
 
 
@@ -255,22 +266,22 @@ TArray<AClockworkTile*> AClockworkHexUnit::GetPathToHex(AClockworkTile* Hex)
 // --- Event Handlers
 // -------------------------
 
-void AClockworkHexUnit::HandleHexTargeted(AClockworkTile* hex)
+void AClockworkHexUnit::HandleHexTargeted(AClockworkHex* hex)
 {
 	OnHexTargeted(hex);
 }
 
-void AClockworkHexUnit::HandleHexVacated(AClockworkTile* hex)
+void AClockworkHexUnit::HandleHexVacated(AClockworkHex* hex)
 {
 	OnHexVacated(hex);
 }
 
-void AClockworkHexUnit::HandleHexReserved(AClockworkTile* hex)
+void AClockworkHexUnit::HandleHexReserved(AClockworkHex* hex)
 {
 	OnHexReserved(hex);
 }
 
-void AClockworkHexUnit::HandleHexOccupied(AClockworkTile* Hex)
+void AClockworkHexUnit::HandleHexOccupied(AClockworkHex* Hex)
 {
 	OnHexOccupied(Hex);
 }

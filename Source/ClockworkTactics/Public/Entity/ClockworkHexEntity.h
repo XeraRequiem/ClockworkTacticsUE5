@@ -13,7 +13,7 @@
 #include "ClockworkHexEntity.generated.h"
 
 
-class AClockworkTile;
+class AClockworkHex;
 
 // -------------------------
 // --- Structs
@@ -73,10 +73,10 @@ protected:
 	 TObjectPtr<UTexture2D> Icon;
 
 	 UPROPERTY(BlueprintReadOnly)
-	 TObjectPtr<AClockworkTile> OccupiedHex;
+	 TObjectPtr<AClockworkHex> OccupiedHex;
 
 	 UPROPERTY(BlueprintReadOnly)
-	 TObjectPtr<AClockworkTile> HexToOccupy;
+	 TObjectPtr<AClockworkHex> HexToOccupy;
 
 
 	 UPROPERTY(BlueprintReadOnly)
@@ -97,7 +97,7 @@ public:
 
 public:
 	UFUNCTION()
-	virtual void Initialize(AClockworkTile* Hex);
+	virtual void Initialize(AClockworkHex* Hex);
 	
 	virtual void InitializeFromData(int32 InEntityId, const FOffsetCoordinate& InLocation, const TSharedPtr<FJsonObject>& InEntityJson);
 
@@ -106,7 +106,7 @@ public:
 	virtual void OccupyPendingTile();
 
 	UFUNCTION()
-	virtual bool OccupyHex(AClockworkTile* Hex);
+	virtual bool OccupyHex(AClockworkHex* Hex);
 
 
 	// -------------------------
@@ -116,7 +116,7 @@ public:
 public:
 	 virtual FString SerializeEntityData() const;
 
-	 AClockworkTile* GetOccupiedHex() const;
+	 AClockworkHex* GetOccupiedHex() const;
 
 
 	// -------------------------

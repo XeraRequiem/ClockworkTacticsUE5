@@ -11,7 +11,7 @@
 #include "ClockworkGrid.generated.h"
 
 
-class AClockworkTile;
+class AClockworkHex;
 
 
 // -------------------------
@@ -48,7 +48,7 @@ class AClockworkGrid : public AActor
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<AClockworkTile> DefaultHexClass;
+	TSubclassOf<AClockworkHex> DefaultHexClass;
 
 	UPROPERTY(EditDefaultsOnly)
 	TMap<TSubclassOf<AClockworkHexEntity>, uint8> DebugClockworkHexEntityClasses;
@@ -56,9 +56,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FString, TSubclassOf<AClockworkHexEntity>> LayoutEntityClassMap;
 
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FString, TSubclassOf<AClockworkHex>> LayoutHexClassMap;
+
 
 	UPROPERTY(BlueprintReadOnly)
-	TArray<TObjectPtr<AClockworkTile>> Hexes;
+	TArray<TObjectPtr<AClockworkHex>> Hexes;
+
+	UPROPERTY(BlueprintReadOnly)
+	TArray<TObjectPtr<AClockworkHex>> DestinationHexes;
 
 
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
@@ -93,17 +99,19 @@ public:
 	// --- Const API
 	// -------------------------
 
-	// To-Do: Replace these with a single method that takes a CoordinateType enum and a coordinate struct, and returns the hex at that coordinate.
 public:
 	UFUNCTION(BlueprintPure)
-	AClockworkTile* GetHexAtCoordinate(const FOffsetCoordinate& Coordinate) const;
+	AClockworkHex* GetHexAtCoordinate(const FOffsetCoordinate& Coordinate) const;
 
 	UFUNCTION(BlueprintPure)
-	AClockworkTile* GetRandomVacantHex() const;
+	AClockworkHex* GetRandomVacantHex() const;
+
+	UFUNCTION(BlueprintPure)
+	TArray<AClockworkHex*> GetDestinationHexes() const;
 
 
 	UFUNCTION(BlueprintPure)
-	uint8 HexDistanceBetween(const AClockworkTile* Hex1, const AClockworkTile* Hex2) const;
+	uint8 HexDistanceBetween(const AClockworkHex* Hex1, const AClockworkHex* Hex2) const;
 
 
 	// -------------------------	
@@ -115,18 +123,22 @@ public:
 	void Initialize(int32 InWidth, int32 InDepth, bool bInVariableHeight);
 
 	UFUNCTION(BlueprintCallable)
-	void InitializeWithLayout(const FString& LayoutFile);
+	void InitializeWithLayout(const FString& HexLayoutFile, const FString& EntityLayoutFile);
 
 	UFUNCTION(BlueprintCallable)
 	void GenerateGrid();
 
 
 	UFUNCTION(BlueprintCallable)
-	TArray<AClockworkTile*> GetPathFromTo(AClockworkTile* Start, AClockworkTile* Target);
+	bool SpawnEntityOnHex(TSubclassOf<AClockworkHexEntity> ClockworkHexEntityClass, AClockworkHex* Hex);
+
+
+	UFUNCTION(BlueprintCallable)
+	TArray<AClockworkHex*> GetPathFromTo(AClockworkHex* Start, AClockworkHex* Target);
 
 	// To-Do
 	UFUNCTION(BlueprintCallable)
-	TArray<AClockworkTile*> BidirectionalPathSearch(AClockworkTile* StartHex, AClockworkTile* TargetHex);
+	TArray<AClockworkHex*> BidirectionalPathSearch(AClockworkHex* StartHex, AClockworkHex* TargetHex);
 
 
 	// -------------------------
@@ -137,8 +149,6 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void SpawnEntityOnRandomHex(TSubclassOf<AClockworkHexEntity> ClockworkHexEntityClass);
 
-	UFUNCTION(BlueprintCallable)
-	bool SpawnEntityOnHex(TSubclassOf<AClockworkHexEntity> ClockworkHexEntityClass, AClockworkTile* Hex);
 
 
 	// -------------------------
@@ -146,11 +156,11 @@ protected:
 	// -------------------------
 
 protected:
-	AClockworkTile* GetHexAt(const FOffsetCoordinate& Coordinate) const;
-	TArray<AClockworkTile*> GetHexNeighbors(const AClockworkTile* Tile) const;
+	AClockworkHex* GetHexAt(const FOffsetCoordinate& Coordinate) const;
+	TArray<AClockworkHex*> GetHexNeighbors(const AClockworkHex* Tile) const;
 
-	FVector CalcualteHexLocation(const AClockworkTile* Tile, int Column, int Row) const;
-	bool DetermineHexPathCost(AClockworkTile* Hex, const AClockworkTile* Target, uint8 StartDistance, float& Cost, const TMap<const AClockworkTile*, uint8>& HexDistanceMap) const;
+	FVector CalcualteHexLocation(const AClockworkHex* Tile, int Column, int Row) const;
+	bool DetermineHexPathCost(AClockworkHex* Hex, const AClockworkHex* Target, uint8 StartDistance, float& Cost, const TMap<const AClockworkHex*, uint8>& HexDistanceMap) const;
 
 
 	// -------------------------
@@ -159,10 +169,10 @@ protected:
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnProcessPathHex(AClockworkTile* Hex);
+	void OnProcessPathHex(AClockworkHex* Hex);
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void OnPathCheckingHexCost(AClockworkTile* Hex);
+	void OnPathCheckingHexCost(AClockworkHex* Hex);
 
 
 	// -------------------------
