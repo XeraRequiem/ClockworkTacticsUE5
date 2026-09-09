@@ -51,6 +51,8 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
 	FString EntityLayoutFile;
 
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	bool bDebugMode{ false };
 
 	//-------------------------
 	// Constructor
