@@ -195,3 +195,8 @@ void AClockworkHex::Debug_SetText(const FString& DebugText)
 {
 	Debug_OnTextSet(DebugText);
 }
+
+void AClockworkHex::Debug_SetColor(const FColor& DebugColor)
+{
+	Debug_OnSetColor(DebugColor);
+}

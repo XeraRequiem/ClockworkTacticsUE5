@@ -191,7 +191,13 @@ public:
 	UFUNCTION()
 	void Debug_SetText(const FString& DebugText);
 
+	UFUNCTION()
+	void Debug_SetColor(const FColor& DebugColor);
+
 protected:
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void Debug_OnTextSet(const FString& DebugText);
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void Debug_OnSetColor(const FColor& DebugColor);
 };
