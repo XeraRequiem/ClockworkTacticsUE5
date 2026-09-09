@@ -5,27 +5,13 @@
 
 // Plugin
 #include "Core/HexMath.h"
+
+// Game
 #include "Entity/ClockworkHexEntity.h"
+#include "Grid/ClockworkHex.h"
 
 // Generated
 #include "ClockworkGrid.generated.h"
-
-
-class AClockworkHex;
-
-
-// -------------------------
-// --- Enum
-// -------------------------
-
-UENUM(BlueprintType)
-enum CoordinateType : uint8
-{
-	Offset,
-	Doubled,
-	Cube,
-	Axial
-};
 
 
 // -------------------------
