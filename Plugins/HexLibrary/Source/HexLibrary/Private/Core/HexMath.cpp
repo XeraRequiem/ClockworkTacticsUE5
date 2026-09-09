@@ -73,7 +73,7 @@ TArray<FAxialCoordinate> UHexMath::GetNeighborsOfAxialCoordinate(FAxialCoordinat
 
 // Distance 
 
-uint8 UHexMath::GetDistanceBetweenOffsetCoordinates(FOffsetCoordinate start, FOffsetCoordinate end)
+int32 UHexMath::GetDistanceBetweenOffsetCoordinates(FOffsetCoordinate start, FOffsetCoordinate end)
 {
     FCubeCoordinate startCube = ConvertOffsetCoordinateToCube(start);
     FCubeCoordinate endCube = ConvertOffsetCoordinateToCube(end);
@@ -81,20 +81,20 @@ uint8 UHexMath::GetDistanceBetweenOffsetCoordinates(FOffsetCoordinate start, FOf
     return GetDistanceBetweenCubeCoordinates(startCube, endCube);
 }
 
-uint8 UHexMath::GetDistanceBetweenDoubledCoordinates(FDoubledCoordinate start, FDoubledCoordinate end)
+int32 UHexMath::GetDistanceBetweenDoubledCoordinates(FDoubledCoordinate start, FDoubledCoordinate end)
 {
     FDoubledCoordinate delta = end - start;
     return FMath::Abs(delta.Y) + FMath::Max(0, (FMath::Abs(delta.X) - FMath::Abs(delta.Y) / 2));
 }
 
-uint8 UHexMath::GetDistanceBetweenCubeCoordinates(FCubeCoordinate start, FCubeCoordinate end)
+int32 UHexMath::GetDistanceBetweenCubeCoordinates(FCubeCoordinate start, FCubeCoordinate end)
 {
     FCubeCoordinate delta = end - start;
 
     return (FMath::Abs(delta.Q) + FMath::Abs(delta.S) + FMath::Abs(delta.R)) / 2;
 }
 
-uint8 UHexMath::GetDistanceBetweenAxialCoordinates(FAxialCoordinate start, FAxialCoordinate end)
+int32 UHexMath::GetDistanceBetweenAxialCoordinates(FAxialCoordinate start, FAxialCoordinate end)
 {
     FAxialCoordinate delta = end - start;
 
@@ -105,8 +105,8 @@ uint8 UHexMath::GetDistanceBetweenAxialCoordinates(FAxialCoordinate start, FAxia
 
 FCubeCoordinate UHexMath::ConvertOffsetCoordinateToCube(FOffsetCoordinate coordinate)
 {
-    uint8 q = coordinate.X - (coordinate.Y - (coordinate.Y & 1)) / 2;
-    uint8 r = coordinate.Y;
+    int32 q = coordinate.X - (coordinate.Y - (coordinate.Y & 1)) / 2;
+    int32 r = coordinate.Y;
     
     return FCubeCoordinate(r, -q - r, q);
 }
@@ -161,8 +161,8 @@ FOffsetCoordinate UHexMath::ConvertDoubledCoordinateToOffset(FDoubledCoordinate 
 
 FCubeCoordinate UHexMath::ConvertDoubledCoordinateToCube(FDoubledCoordinate coordinate)
 {
-    uint8 q = (coordinate.X - coordinate.Y) / 2;
-    uint8 r = coordinate.Y;
+    int32 q = (coordinate.X - coordinate.Y) / 2;
+    int32 r = coordinate.Y;
 
     return FCubeCoordinate(r, -q - r, q);
 }
