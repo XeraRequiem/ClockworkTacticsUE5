@@ -118,6 +118,8 @@ public:
 
 	 AClockworkHex* GetOccupiedHex() const;
 
+	 FString GetFriendlyName() const;
+
 
 	// -------------------------
 	// --- Implementation

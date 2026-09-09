@@ -50,10 +50,10 @@ struct FOffsetCoordinate
 
 public:
 	UPROPERTY(BlueprintReadWrite)
-	uint8 X;
+	int32 X;
 
 	UPROPERTY(BlueprintReadWrite)
-	uint8 Y;
+	int32 Y;
 
 
 	// -------------------------
@@ -67,7 +67,7 @@ public:
 	{
 	}
 
-	FOffsetCoordinate(uint8 inX, uint8 inY) :
+	FOffsetCoordinate(int32 inX, int32 inY) :
 		X(inX),
 		Y(inY)
 	{
@@ -98,15 +98,31 @@ public:
 	}
 
 	// -------------------------
-	// --- Public API
+	// --- Const API
 	// -------------------------
 	
 	FString ToString() const
 	{
 		 return FString::Printf(TEXT("(%d, %d)"), X, Y);
 	}
+
+
+	// -------------------------
+	// --- Operators
+	// -------------------------
+
+	bool operator==(const FOffsetCoordinate& other) const
+	{
+		return X == other.X && Y == other.Y;
+	}
 };
 
+FORCEINLINE uint32 GetTypeHash(const FOffsetCoordinate& Coord)
+{
+	return HashCombine(GetTypeHash(Coord.X), GetTypeHash(Coord.Y));
+}
+
+	
 /*
 * Another way to look at hexagonal grids is to see that there are three primary axes; q, s, and r.
 * 
@@ -141,13 +157,13 @@ struct FCubeCoordinate
 
 public:
 	UPROPERTY(BlueprintReadWrite)
-	uint8 R;
+	int32 R;
 
 	UPROPERTY(BlueprintReadWrite)
-	uint8 S;
+	int32 S;
 
 	UPROPERTY(BlueprintReadWrite)
-	uint8 Q;
+	int32 Q;
 
 
 	// -------------------------
@@ -162,7 +178,7 @@ public:
 	{
 	}
 
-	FCubeCoordinate(uint8 inR, uint8 inS, uint8 inQ) :
+	FCubeCoordinate(int32 inR, int32 inS, int32 inQ) :
 		R(inR),
 		S(inS),
 		Q(inQ)
@@ -175,10 +191,27 @@ public:
 	// -------------------------
 
 public:
+	bool Equals(const FCubeCoordinate& other) const
+	{
+		return R == other.R && S == other.S && Q == other.Q;
+	}
+
+
+	// -------------------------
+	// --- Operators
+	// -------------------------
+
+public:
 	FCubeCoordinate operator-(FCubeCoordinate other)
 	{
 		return FCubeCoordinate(R - other.R, S - other.S, Q - other.Q);
 	}
+
+	bool operator==(const FCubeCoordinate& other) const
+	{
+		return Equals(other);
+	}
+
 };
 
 
@@ -199,10 +232,10 @@ struct FAxialCoordinate
 
 public:
 	UPROPERTY(BlueprintReadWrite)
-	uint8 R;
+	int32 R;
 
 	UPROPERTY(BlueprintReadWrite)
-	uint8 Q;
+	int32 Q;
 
 
 	// -------------------------
@@ -216,7 +249,7 @@ public:
 	{
 	}
 
-	FAxialCoordinate(uint8 inR, uint8 inQ) :
+	FAxialCoordinate(int32 inR, int32 inQ) :
 		R(inR),
 		Q(inQ)
 	{
@@ -263,10 +296,10 @@ struct FDoubledCoordinate
 
 public:
 	UPROPERTY(BlueprintReadWrite)
-	uint8 X;
+	int32 X;
 
 	UPROPERTY(BlueprintReadWrite)
-	uint8 Y;
+	int32 Y;
 
 
 	// -------------------------
@@ -280,7 +313,7 @@ public:
 	{
 	}
 
-	FDoubledCoordinate(uint8 inX, uint8 inY) :
+	FDoubledCoordinate(int32 inX, int32 inY) :
 		X(inX),
 		Y(inY)
 	{
@@ -324,16 +357,16 @@ public:
 
 	// Distance
 	UFUNCTION(BlueprintCallable)
-	uint8 GetDistanceBetweenOffsetCoordinates(FOffsetCoordinate start, FOffsetCoordinate end);
+	static int32 GetDistanceBetweenOffsetCoordinates(FOffsetCoordinate start, FOffsetCoordinate end);
 
 	UFUNCTION(BlueprintCallable)
-	uint8 GetDistanceBetweenDoubledCoordinates(FDoubledCoordinate start, FDoubledCoordinate end);
+	static int32 GetDistanceBetweenDoubledCoordinates(FDoubledCoordinate start, FDoubledCoordinate end);
 
 	UFUNCTION(BlueprintCallable)
-	uint8 GetDistanceBetweenCubeCoordinates(FCubeCoordinate start, FCubeCoordinate end);
+	static int32 GetDistanceBetweenCubeCoordinates(FCubeCoordinate start, FCubeCoordinate end);
 
 	UFUNCTION(BlueprintCallable)
-	uint8 GetDistanceBetweenAxialCoordinates(FAxialCoordinate start, FAxialCoordinate end);
+	static int32 GetDistanceBetweenAxialCoordinates(FAxialCoordinate start, FAxialCoordinate end);
 
 	// Conversion
 	UFUNCTION(BlueprintCallable)

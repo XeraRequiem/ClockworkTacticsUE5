@@ -128,6 +128,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	AClockworkHex* GetReservedHex() const;
 
+	UFUNCTION(BlueprintCallable)
+	uint8 GetDistanceToTargetHex() const;
+
 
 	// -------------------------
 	// --- API

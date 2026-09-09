@@ -11,11 +11,6 @@
 
 
 // -------------------------
-// --- Structs
-// -------------------------
-
-
-// -------------------------
 // --- Classes
 // -------------------------
 
@@ -30,25 +25,21 @@ class AClockworkHexCharacter : public AClockworkHexUnit
 	// -------------------------
 
 protected:
-	 
-	 /*
-	 UPROPERTY()
-	 TObjectPtr<AClockworkWeapon> EquippedWeapon;
-	 */
+	/*
+	* An array of entities that are within the character's attack range. Sorted by Priority: Units closest to their target first, then other entities closest to the character.
+	*/
+	UPROPERTY(BlueprintReadOnly)
+	TArray<AClockworkHexEntity*> EntitiesWithinRange;
 
-	 /*
-	 UPROPERTY()
-	 TObjectPtr<AClockworkArmor> EquippedArmor;
-	 */
+	/*
+	* The maximum number of targets this character can attack at once.
+	*/
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	uint8 MaxTargets{ 1 };
 
-	 /*
-	 UPROPERTY()
-	 TObjectPtr<AClockworkAccessory> EquippedAccessory;
-	 */
+	UPROPERTY()
+	uint16 CurrentExperience{ 0 };
 
-	 UPROPERTY()
-	 uint16 CurrentExperience{ 0 };
-	 
 
 	// -------------------------
 	// --- Constructors
@@ -63,20 +54,7 @@ public:
 	// -------------------------
 
 public:
-
-
-	// -------------------------
-	// --- API
-	// -------------------------
-
-public:
-
-
-	// -------------------------
-	// --- Const API
-	// -------------------------
-
-public:
+	void Tick(float dt) override;
 
 
 	// -------------------------
@@ -84,17 +62,18 @@ public:
 	// -------------------------
 
 protected:
+	void UpdateTargetEntitiesInRange();
+
+
+	TArray<AClockworkHexEntity*> GetTargetableEntitiesWithinRange(uint8 Range);
+
+	TArray<FOffsetCoordinate> GetCoordinatesInRange();
 
 
 	// -------------------------
-	// --- Blueprint Events
+	// --- Implementation
 	// -------------------------
 
-protected:
-
-
-	// -------------------------
-	// --- Event Handlers
-	// -------------------------
-
+private:
+	void Debug_PaintHexesInRange(TArray<AClockworkHex*> Hexes);
 };
