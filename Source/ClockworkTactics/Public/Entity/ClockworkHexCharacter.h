@@ -25,18 +25,21 @@ class AClockworkHexCharacter : public AClockworkHexUnit
 	// -------------------------
 
 protected:
+	/*
+	* An array of entities that are within the character's attack range. Sorted by Priority: Units closest to their target first, then other entities closest to the character.
+	*/
 	UPROPERTY(BlueprintReadOnly)
-	TArray<AClockworkHexEntity*> TargetEntities;
+	TArray<AClockworkHexEntity*> EntitiesWithinRange;
 
+	/*
+	* The maximum number of targets this character can attack at once.
+	*/
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	uint8 MaxTargets{ 1 };
 
 	UPROPERTY()
 	uint16 CurrentExperience{ 0 };
 
-private:
-	float TimeSinceLastLog{ 0.0f };
-	 
 
 	// -------------------------
 	// --- Constructors
@@ -61,9 +64,10 @@ public:
 protected:
 	void UpdateTargetEntitiesInRange();
 
-	TArray<FOffsetCoordinate> GetCoordinatesInRange();
 
 	TArray<AClockworkHexEntity*> GetTargetableEntitiesWithinRange(uint8 Range);
+
+	TArray<FOffsetCoordinate> GetCoordinatesInRange();
 
 
 	// -------------------------

@@ -35,28 +35,11 @@ void AClockworkHexCharacter::Tick(float dt)
 {
 	UpdateTargetEntitiesInRange();
 
-	if (TargetEntities.Num() > 0)
+	if (EntitiesWithinRange.Num() > 0)
 	{
-		FVector ForwardDirection = TargetEntities[0]->GetActorLocation() - GetActorLocation();
-		FRotator ForwardRotation = FRotator(0, ForwardDirection.Rotation().Yaw, 0);
-		SetActorRotation(ForwardRotation);
-	}
-
-	TimeSinceLastLog += dt;
-	if (TimeSinceLastLog >= 2.0f)
-	{
-		UE_LOG(LogClockwork, Verbose, TEXT("Current Targets:"));
-		if (TargetEntities.Num() == 0)
-		{
-			UE_LOG(LogClockwork, Verbose, TEXT("\tNone"));
-		}
-
-		for (AClockworkHexEntity* Target : TargetEntities)
-		{
-			UE_LOG(LogClockwork, Verbose, TEXT("\t%s"), *Target->GetFriendlyName());
-		}
-
-		TimeSinceLastLog = 0.0f;
+		// Rotate Character to Face Primary Target
+		FVector ForwardDirection = EntitiesWithinRange[0]->GetActorLocation() - GetActorLocation();
+		SetActorRotation(FRotator(0, ForwardDirection.Rotation().Yaw, 0));
 	}
 }
 
@@ -65,38 +48,11 @@ void AClockworkHexCharacter::Tick(float dt)
 // --- Implementation
 // -------------------------
 
-TArray<FOffsetCoordinate> AClockworkHexCharacter::GetCoordinatesInRange()
-{
-	FOffsetCoordinate Cooordinate = OccupiedHex->GetGridCoordinate();
-	FCubeCoordinate CoordinateCube = UHexMath::ConvertOffsetCoordinateToCube(Cooordinate);
-
-	TArray<FOffsetCoordinate> CoordinatesInRange;
-	for (int32 q = CoordinateCube.Q - UnitData.AttackRange; q <= CoordinateCube.Q + UnitData.AttackRange; ++q)
-	{
-		for (int32 r = CoordinateCube.R - UnitData.AttackRange; r <= CoordinateCube.R + UnitData.AttackRange; ++r)
-		{
-			int32 s = -q - r;
-			if (FMath::Abs(s - CoordinateCube.S) <= UnitData.AttackRange)
-			{
-				FCubeCoordinate TargetCubeCoordinate(r, s, q);
-				if (TargetCubeCoordinate.Equals(CoordinateCube))
-				{
-					continue;
-				}
-
-				CoordinatesInRange.Add(UHexMath::ConvertCubeCoordinateToOffset(TargetCubeCoordinate));
-			}
-		}
-	}
-
-	return CoordinatesInRange;
-}
-
-
 void AClockworkHexCharacter::UpdateTargetEntitiesInRange()
 {
-	TArray<AClockworkHexEntity*> EntitiesInRange = GetTargetableEntitiesWithinRange(UnitData.AttackRange);
-	EntitiesInRange.Sort([](const AClockworkHexEntity& A, const AClockworkHexEntity& B)
+	EntitiesWithinRange.Empty();
+	EntitiesWithinRange = GetTargetableEntitiesWithinRange(UnitData.AttackRange);
+	EntitiesWithinRange.Sort([](const AClockworkHexEntity& A, const AClockworkHexEntity& B)
 	{
 		// A = unit, B =/= unit
 		if (A.IsA<AClockworkHexUnit>() && !B.IsA<AClockworkHexUnit>())
@@ -105,7 +61,7 @@ void AClockworkHexCharacter::UpdateTargetEntitiesInRange()
 		}
 
 		// A =/= unit, B = unit
-		if (!A.IsA<AClockworkHexUnit>() && !B.IsA<AClockworkHexUnit>())
+		if (!A.IsA<AClockworkHexUnit>() && B.IsA<AClockworkHexUnit>())
 		{
 			return false;
 		}
@@ -123,13 +79,8 @@ void AClockworkHexCharacter::UpdateTargetEntitiesInRange()
 
 		return UnitA->GetDistanceToTargetHex() < UnitB->GetDistanceToTargetHex();
 	});
-	
-	TargetEntities.Empty();
-	for (int i = 0; i < MaxTargets && i < EntitiesInRange.Num(); ++i)
-	{
-		TargetEntities.Add(EntitiesInRange[i]);
-	}
 }
+
 
 TArray<AClockworkHexEntity*> AClockworkHexCharacter::GetTargetableEntitiesWithinRange(uint8 Range)
 {
@@ -152,7 +103,7 @@ TArray<AClockworkHexEntity*> AClockworkHexCharacter::GetTargetableEntitiesWithin
 	}
 
 	// Debug: Paint Hexes In Range
-	if (AClockworkGameMode* GameMode = Cast<AClockworkGameMode>(UGameplayStatics::GetGameMode(GetWorld())))
+	if (AClockworkGameMode* GameMode = Cast<AClockworkGameMode>(UGameplayStatics::GetGameMode(GetWorld()))) 
 	{
 		if (GameMode->bDebugMode)
 		{
@@ -171,6 +122,32 @@ TArray<AClockworkHexEntity*> AClockworkHexCharacter::GetTargetableEntitiesWithin
 	}
 
 	return EntitiesInRange;
+}
+
+TArray<FOffsetCoordinate> AClockworkHexCharacter::GetCoordinatesInRange()
+{
+	FCubeCoordinate CoordinateCube = UHexMath::ConvertOffsetCoordinateToCube(OccupiedHex->GetGridCoordinate());
+
+	TArray<FOffsetCoordinate> CoordinatesInRange;
+	for (int32 q = CoordinateCube.Q - UnitData.AttackRange; q <= CoordinateCube.Q + UnitData.AttackRange; ++q)
+	{
+		for (int32 r = CoordinateCube.R - UnitData.AttackRange; r <= CoordinateCube.R + UnitData.AttackRange; ++r)
+		{
+			int32 s = -q - r;
+			if (FMath::Abs(s - CoordinateCube.S) <= UnitData.AttackRange)
+			{
+				// Skip the center hex (the character's current position)
+				if (CoordinateCube.Q == q && CoordinateCube.R == r && CoordinateCube.S == s)
+				{
+					continue;
+				}
+				
+				CoordinatesInRange.Add(UHexMath::ConvertCubeCoordinateToOffset(FCubeCoordinate(r, s, q)));
+			}
+		}
+	}
+
+	return CoordinatesInRange;
 }
 
 
