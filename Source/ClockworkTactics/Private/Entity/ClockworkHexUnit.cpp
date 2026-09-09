@@ -133,6 +133,16 @@ AClockworkHex* AClockworkHexUnit::GetReservedHex() const
 }
 
 
+uint8 AClockworkHexUnit::GetDistanceToTargetHex() const
+{
+	if (OccupiedHex != nullptr && TargetedHex != nullptr)
+	{
+		return UHexMath::GetDistanceBetweenOffsetCoordinates(OccupiedHex->GetGridCoordinate(), TargetedHex->GetGridCoordinate());
+	}
+
+	return 0;
+}
+
 // -------------------------
 // --- API
 // -------------------------
@@ -218,7 +228,7 @@ void AClockworkHexUnit::MoveToReservedHex(float dt)
 		MoveTimeTotal += dt;
 
 		float PercentToTarget = FMath::Clamp(MoveTimeTotal * MoveSpeed, 0.0f, 1.0f);
-		UE_LOG(LogHex, Verbose, TEXT("Moving To Reserved Hex %f"), (PercentToTarget * 100.0f));
+		//UE_LOG(LogHex, Verbose, TEXT("Moving To Reserved Hex %f"), (PercentToTarget * 100.0f));
 
 		FVector WorldLocation = FMath::Lerp(OccupiedHex->GetOccupationLocation(), ReservedHex->GetOccupationLocation(), PercentToTarget);
 		SetActorLocation(WorldLocation);

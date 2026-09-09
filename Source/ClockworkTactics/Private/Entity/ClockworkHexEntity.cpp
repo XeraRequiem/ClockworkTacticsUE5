@@ -103,6 +103,11 @@ AClockworkHex* AClockworkHexEntity::GetOccupiedHex() const
 	return OccupiedHex;
 }
 
+FString AClockworkHexEntity::GetFriendlyName() const
+{
+	return FriendlyName;
+}
+
 
 // -------------------------
 // --- Implementation
