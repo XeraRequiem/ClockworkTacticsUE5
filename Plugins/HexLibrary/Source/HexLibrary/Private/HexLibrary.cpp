@@ -6,7 +6,7 @@
 // --- Log Category
 // -------------------------
 
-DEFINE_LOG_CATEGORY(LogHex);
+//DEFINE_LOG_CATEGORY(LogHex);
 
 
 // -------------------------
