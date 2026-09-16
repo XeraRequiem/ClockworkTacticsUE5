@@ -44,7 +44,7 @@ class AClockworkProjectileBase : public AActor
 	// -------------------------
 
 protected:
-	// -------------------- Components -------------------- //
+	// ---------- Components --------------- //
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components)
 	TObjectPtr<UStaticMeshComponent> ProjectileMesh;
@@ -52,15 +52,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components)
 	TObjectPtr<UCapsuleComponent> CollisionCapsule;
 
-	// -------------------- Targetting -------------------- //
+	// ---------- Targetting --------------- //
 
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (ExposeOnSpawn = true))
-	TObjectPtr<AClockworkHexEntity> SourceEntity;
+	UPROPERTY(BlueprintReadOnly)
+	FVector StartLocation;
 	
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, meta = (ExposeOnSpawn = true))
 	TObjectPtr<AClockworkHexEntity> TargetEntity;
 
-	// -------------------- Travel Time -------------------- //
+	// ---------- Travel Time --------------- //
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	float MaxTravelTime{ 1.0f };
@@ -70,6 +70,11 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	float TravelTime{ 0.0f };
+
+	// ---------- Damage --------------- //
+
+	UPROPERTY(BlueprintReadOnly, meta = (ExposeOnSpawn = true))
+	FClockworkDamage Damage;
 
 
 	// -------------------------
@@ -95,6 +100,12 @@ public:
 protected:
 	void DestroyProjectile(EClockworkProjectDestroyReason Reason);
 
+
+	// -------------------------
+	// --- Event Handlers
+	// -------------------------
+
+protected:
 	UFUNCTION()
 	void OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };

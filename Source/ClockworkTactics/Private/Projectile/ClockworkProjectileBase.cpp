@@ -26,6 +26,9 @@ AClockworkProjectileBase::AClockworkProjectileBase() :
 	CollisionCapsule->SetupAttachment(ProjectileMesh);
 
 	CollisionCapsule->OnComponentBeginOverlap.AddDynamic(this, &AClockworkProjectileBase::OnCollisionBeginOverlap);
+
+	// Store Initial Position For Travel Calculations
+	StartLocation = GetActorLocation();
 }
 
 
@@ -55,26 +58,16 @@ void AClockworkProjectileBase::Tick(float DeltaTime)
 
 	// Interpolate the projectile's location between its current location and the target entity's location based on the travel time
 	// Temp: Each Entity Should have a GetProjectileTargetLocation() function that returns the location the projectile should travel to (e.g., the center of the entity, or a specific socket location)
-
-	FVector SourceOrigin;
-	FVector SourceExtents;
-	SourceEntity->GetActorBounds(true, SourceOrigin, SourceExtents);
-	FVector SourceLocation = SourceOrigin + FVector(0.0, 0.0, SourceExtents.Z / 2.0f);
-
-	UE_LOG(LogProjectile, Verbose, TEXT("(Source) Origin: %s, Extents: %s"), *SourceOrigin.ToString(), *SourceExtents.ToString());
-
 	FVector TargetOrigin;
 	FVector TargetExtents;
 	TargetEntity->GetActorBounds(true, TargetOrigin, TargetExtents);
 	FVector TargetLocation = TargetOrigin + FVector(0.0, 0.0, TargetExtents.Z / 2.0f);
 
-	UE_LOG(LogProjectile, Verbose, TEXT("(Target) Origin: %s, Extents: %s"), *TargetOrigin.ToString(), *TargetExtents.ToString());
-
-	FVector InterpolatedLocation = FMath::Lerp<FVector>(SourceLocation, TargetLocation, TravelTime / MaxTravelTime);
+	FVector InterpolatedLocation = FMath::Lerp<FVector>(StartLocation, TargetLocation, TravelTime / MaxTravelTime);
 	SetActorLocation(InterpolatedLocation);
 
 	// Rotate the projectile to face the target entity
-	FVector ForwardVector = TargetEntity->GetActorLocation() - GetActorLocation();
+	FVector ForwardVector = TargetLocation - GetActorLocation();
 	SetActorRotation(FRotator(0.0, ForwardVector.Rotation().Yaw, 0.0));
 }
 
@@ -93,12 +86,19 @@ void AClockworkProjectileBase::DestroyProjectile(EClockworkProjectDestroyReason 
 }
 
 
+// -------------------------
+// --- Event Handlers
+// -------------------------
+
 void AClockworkProjectileBase::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogProjectile, Verbose, TEXT("Oh no, I hit %s"), *OtherActor->GetName());
 	if (OtherActor->IsA<AClockworkHexEntity>())
 	{
-		// To-Do: Alert Other Actor To Collision
+		if (AClockworkHexEntity* Entity = Cast<AClockworkHexEntity>(OtherActor))
+		{
+			Entity->ApplyDamage(Damage);
+		}
+
 		DestroyProjectile(EClockworkProjectDestroyReason::HitTarget);
 	}
 }
