@@ -70,7 +70,6 @@ void AClockworkHexCharacter::AttemptAttackTargets()
 void AClockworkHexCharacter::AttackTarget(AClockworkHexEntity* Target)
 {
 	// To-Do: Implement Attack Logic (Damage Calculation, Effects, etc.)
-	//Target->ReceiveAttack(this, UnitData.AttackDamage);
 	OnAttackTarget(Target);
 }
 
