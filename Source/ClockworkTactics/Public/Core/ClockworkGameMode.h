@@ -241,14 +241,14 @@ private:
 	uint8 MaxLives{ 5 };
 	uint8 CurrentLives{ 5 };
 
-	bool bStarted{ false }
+	bool bStarted{ false };
 
 
 	//-------------------------
 	// Constructors
 	//-------------------------
 
-public;
+public:
 	FLivesGameTypeData() {}
 
 	FLivesGameTypeData(uint8 Lives) :

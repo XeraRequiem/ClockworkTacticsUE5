@@ -19,6 +19,9 @@ class AClockworkHex;
 // --- Structs
 // -------------------------
 
+/*
+* 
+*/
 USTRUCT(BlueprintType)
 struct FClockworkHexEntityData
 {
@@ -43,11 +46,43 @@ struct FClockworkHexEntityData
 	 bool bDebugMode{ false };
 };
 
+/*
+* 
+*/
+USTRUCT(BlueprintType)
+struct FClockworkDamage
+{
+	GENERATED_BODY()
+
+	// -------------------------
+	// --- Member Variables
+	// -------------------------
+
+private:
+	const AClockworkHexEntity* Source;
+	float Damage{ 0.0f };
+
+
+	// -------------------------
+	// --- Constructors
+	// -------------------------
+
+public:
+	FClockworkDamage(const AClockworkHexEntity* InSource, float InDamage) :
+		Source(InSource),
+		Damage(InDamage)
+	{}
+
+};
+
 
 // -------------------------
 // --- Classes
 // -------------------------
 
+/*
+* 
+*/
 UCLASS(BlueprintType)
 class AClockworkHexEntity : public AActor
 {
@@ -96,11 +131,15 @@ public:
 	// -------------------------
 
 public:
+	
+	// ---------- Initialization ---------- //
+
 	UFUNCTION()
 	virtual void Initialize(AClockworkHex* Hex);
 	
 	virtual void InitializeFromData(int32 InEntityId, const FOffsetCoordinate& InLocation, const TSharedPtr<FJsonObject>& InEntityJson);
 
+	// ---------- Occupation ---------- //
 
 	UFUNCTION()
 	virtual void OccupyPendingTile();
@@ -108,6 +147,13 @@ public:
 	UFUNCTION()
 	virtual bool OccupyHex(AClockworkHex* Hex);
 
+	// ---------- Damage ---------- //
+
+	UFUNCTION()
+	virtual void ApplyDamage(const FClockworkDamage& Damage);
+
+	UFUNCTION()
+	virtual void DestroyEntity();
 
 	// -------------------------
 	// --- Const API

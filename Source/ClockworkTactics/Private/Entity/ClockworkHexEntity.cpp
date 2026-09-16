@@ -83,6 +83,20 @@ bool AClockworkHexEntity::OccupyHex(AClockworkHex* Hex)
 }
 
 
+void AClockworkHexEntity::ApplyDamage(const FClockworkDamage& Damage)
+{
+	if (EntityData.bDestructible)
+	{
+		DestroyEntity();
+	}
+}
+
+void AClockworkHexEntity::DestroyEntity()
+{
+	Destroy();
+}
+
+
 // -------------------------
 // --- Const API
 // -------------------------
