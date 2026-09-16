@@ -17,9 +17,9 @@ AClockworkHexEntity::AClockworkHexEntity() :
 	 Super()
 {
 	 FriendlyName = TEXT("Clockwork Hex Entity");
-
+	 
 	 PrimaryActorTick.bCanEverTick = true;
-	 PrimaryActorTick.bTickEvenWhenPaused = true;
+	 PrimaryActorTick.bTickEvenWhenPaused = false;
 	 PrimaryActorTick.TickGroup = TG_PrePhysics;
 }
 

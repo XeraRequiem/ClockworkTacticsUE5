@@ -58,8 +58,11 @@ struct FClockworkDamage
 	// --- Member Variables
 	// -------------------------
 
-private:
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	const AClockworkHexEntity* Source;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Damage{ 0.0f };
 
 
@@ -68,6 +71,9 @@ private:
 	// -------------------------
 
 public:
+	FClockworkDamage()
+	{	}
+
 	FClockworkDamage(const AClockworkHexEntity* InSource, float InDamage) :
 		Source(InSource),
 		Damage(InDamage)
