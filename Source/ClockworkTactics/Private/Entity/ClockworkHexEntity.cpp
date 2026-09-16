@@ -87,6 +87,12 @@ void AClockworkHexEntity::ApplyDamage(const FClockworkDamage& Damage)
 {
 	if (EntityData.bDestructible)
 	{
+		if (OccupiedHex != nullptr)
+		{
+			OccupiedHex->Vacate(this);
+			OccupiedHex = nullptr;
+		}
+
 		DestroyEntity();
 	}
 }
