@@ -92,6 +92,8 @@ public:
 public:
 	void Tick(float DeltaTime) override;
 
+	void PostInitializeComponents() override;
+
 
 	// -------------------------
 	// --- Implementation

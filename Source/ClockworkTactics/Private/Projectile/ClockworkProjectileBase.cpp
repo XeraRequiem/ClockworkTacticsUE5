@@ -26,9 +26,6 @@ AClockworkProjectileBase::AClockworkProjectileBase() :
 	CollisionCapsule->SetupAttachment(ProjectileMesh);
 
 	CollisionCapsule->OnComponentBeginOverlap.AddDynamic(this, &AClockworkProjectileBase::OnCollisionBeginOverlap);
-
-	// Store Initial Position For Travel Calculations
-	StartLocation = GetActorLocation();
 }
 
 
@@ -71,6 +68,14 @@ void AClockworkProjectileBase::Tick(float DeltaTime)
 	SetActorRotation(FRotator(0.0, ForwardVector.Rotation().Yaw, 0.0));
 }
 
+void AClockworkProjectileBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	// Store Initial Position For Travel Calculations
+	StartLocation = GetActorLocation();
+}
+
 
 // -------------------------
 // --- Implementation
@@ -92,6 +97,8 @@ void AClockworkProjectileBase::DestroyProjectile(EClockworkProjectDestroyReason 
 
 void AClockworkProjectileBase::OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	UE_LOG(LogProjectile, Verbose, TEXT("I collided with %s"), *OtherActor->GetName());
+
 	if (OtherActor->IsA<AClockworkHexEntity>())
 	{
 		if (AClockworkHexEntity* Entity = Cast<AClockworkHexEntity>(OtherActor))
