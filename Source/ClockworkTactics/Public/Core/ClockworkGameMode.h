@@ -6,6 +6,7 @@
 
 // Game
 #include "Core/ClockworkCharacter.h"
+#include "Core/ClockworkStatics.h"
 #include "Grid/ClockworkGrid.h"
 
 // Generated
@@ -16,13 +17,15 @@
 // Enums
 //-------------------------
 
-UENUM()
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class EGameType : uint8
 {
-	Time, /* Limited Time */
-	Ticket, /* Limited Number of Enemies */
-	Lives /* Unlimited Enemies, Limited Lives */
+	None		= 0 UMETA(Hidden),
+	Time		= 1 << 0, /* Limited Time */
+	Ticket	= 1 << 1, /* Limited Number of Enemies */
+	Lives		= 4 << 2  /* Limited Lives */
 };
+ENUM_CLASS_FLAGS(EGameType);
 
 
 //-------------------------
@@ -31,10 +34,9 @@ enum class EGameType : uint8
 
 /*
 * Time-Limited Game Mode. Defaults to 5min.
-*		Optional: Limited Lives. Defaults to Off
 */
-USTRUCT()
-struct FTimeGameTypeData
+USTRUCT(BlueprintType)
+struct FClockworkTimeData
 {
 	GENERATED_BODY()
 
@@ -43,13 +45,18 @@ struct FTimeGameTypeData
 	//-------------------------
 
 private:
-	FTimespan Duration{ FTimespan::FromMinutes(5.0) };
+	UPROPERTY()
+	FTimespan Duration{ FTimespan::FromMinutes(0.0) };
 
-	FDateTime StartTime;
-	FDateTime EndTime;
+	UPROPERTY()
+	FDateTime StartTime{ FDateTime::FDateTime() };
 
-	uint8 MaxLives{ 0 };
-	uint8 CurrentLives{ 0 };
+	UPROPERTY()
+	FDateTime EndTime{ FDateTime::FDateTime() };
+
+
+	UPROPERTY()
+	bool bTimeLimited{ true };
 
 
 	//-------------------------
@@ -57,16 +64,10 @@ private:
 	//-------------------------
 
 public:
-	FTimeGameTypeData() {}
+	FClockworkTimeData() {}
 
-	FTimeGameTypeData(FTimespan InDuration) :
+	FClockworkTimeData(FTimespan InDuration) :
 		Duration(InDuration)
-	{}
-
-	FTimeGameTypeData(FTimespan InDuration, uint8 InMaxLives) :
-		Duration(InDuration),
-		MaxLives(InMaxLives),
-		CurrentLives(InMaxLives)
 	{}
 
 
@@ -75,24 +76,25 @@ public:
 	//-------------------------
 
 public:
-	// --------------- Time --------------- //
-
 	void Start()
 	{
 		StartTime = FDateTime::Now();
-		EndTime = StartTime + Duration;
+
+		if (bTimeLimited)
+		{
+			EndTime = StartTime + Duration;
+		}
 	}
+
 
 	FTimespan GetTimeRemaining()
 	{
-		if (FDateTime::Now() >= EndTime)
-		{
-			return FTimespan::FromSeconds(0);
-		}
+		return (IsPastTime()) ? FTimespan::FromSeconds(0) : EndTime - FDateTime::Now();
+	}
 
-		FTimespan TimeElapsed = FDateTime::Now() - StartTime;
-
-		return Duration - (FDateTime::Now() - StartTime);
+	FTimespan GetTimeElapsed()
+	{
+		return FDateTime::Now() - StartTime;
 	}
 
 	bool IsPastTime()
@@ -100,45 +102,17 @@ public:
 		return FDateTime::Now() >= EndTime;
 	}
 
-	bool IsStarted()
+	bool HasStarted()
 	{
 		return Duration.GetTicks() > 0;
-	}
-
-	// --------------- Lives --------------- //
-
-	uint8 GetMaxLives()
-	{
-		return MaxLives;
-	}
-
-	uint8 GetRemainingtLives()
-	{
-		return CurrentLives;
-	}
-
-	bool HasLivesRemaining()
-	{
-		return CurrentLives > 0;
-	}
-
-	bool HasLimitedLives()
-	{
-		return MaxLives > 0;
-	}
-
-	void ReduceLives(uint8 Lives = 1)
-	{
-		CurrentLives -= (Lives > CurrentLives) ? CurrentLives : Lives;
 	}
 };
 
 /*
 * Ticket/Enemy limited Game Mode. Defaults to 10 Tickets
-*		Optional: Limited Lives. Defaults to Off
 */
-USTRUCT()
-struct FTicketGameTypeData
+USTRUCT(BlueprintType)
+struct FClockworkTicketData
 {
 	GENERATED_BODY()
 
@@ -147,12 +121,11 @@ struct FTicketGameTypeData
 	//-------------------------
 
 private:
-	uint8 MaxTickets{ 10 };
-	uint8 CurrentTickets{ 0 };
+	UPROPERTY()
+	int16 MaxTickets{ 10 };
 
-
-	uint8 MaxLives{ 0 };
-	uint8 CurrentLives{ 0 };
+	UPROPERTY()
+	int16 CurrentTickets{ 0 };
 
 
 	//-------------------------
@@ -160,16 +133,10 @@ private:
 	//-------------------------
 
 public:
-	FTicketGameTypeData() {}
+	FClockworkTicketData() {}
 
-	FTicketGameTypeData(uint8 InMaxTickets) :
+	FClockworkTicketData(uint8 InMaxTickets) :
 		MaxTickets(InMaxTickets)
-	{}
-
-	FTicketGameTypeData(uint8 InMaxTickets, uint8 InMaxLives) :
-		MaxTickets(InMaxTickets),
-		MaxLives(InMaxLives),
-		CurrentLives(InMaxLives)
 	{}
 
 
@@ -180,46 +147,19 @@ public:
 public:
 	// --------------- Tickets --------------- //
 	
-	uint8 GetRemainingTickets()
+	int16 GetRemainingTickets()
 	{
 		return CurrentTickets;
 	}
 
-	uint8 GetMaxTickets()
+	int16 GetMaxTickets()
 	{
 		return MaxTickets;
 	}
 
-	void RemoveTickets(uint8 TicketsToRemove = 1)
+	void AddTickets(int16 TicketsToAdd = 1)
 	{
-		CurrentTickets -= (TicketsToRemove > CurrentTickets) ? CurrentTickets : TicketsToRemove;
-	}
-
-	// --------------- Lives --------------- //
-
-	int32 GetMaxLives()
-	{
-		return MaxLives;
-	}
-
-	int32 GetRemainingtLives()
-	{
-		return CurrentLives;
-	}
-
-	bool HasLivesRemaining()
-	{
-		return CurrentLives > 0;
-	}
-
-	bool HasLimitedLives()
-	{
-		return MaxLives > 0;
-	}
-
-	void ReduceLives(uint8 Lives = 1)
-	{
-		CurrentLives -= (Lives > CurrentLives) ? CurrentLives : Lives;
+		CurrentTickets = FMath::Min(CurrentTickets + TicketsToAdd, MaxTickets);
 	}
 };
 
@@ -227,8 +167,8 @@ public:
 * Unlimited Time & Tickets/Enemies. Limited Number of Lives Only.
 * Defaults to 5 Lives
 */
-USTRUCT()
-struct FLivesGameTypeData
+USTRUCT(BlueprintType)
+struct FClockworkLivesData
 {
 	GENERATED_BODY()
 
@@ -237,11 +177,8 @@ struct FLivesGameTypeData
 	//-------------------------
 
 private:
-	FDateTime StartTime;
 	uint8 MaxLives{ 5 };
 	uint8 CurrentLives{ 5 };
-
-	bool bStarted{ false };
 
 
 	//-------------------------
@@ -249,9 +186,9 @@ private:
 	//-------------------------
 
 public:
-	FLivesGameTypeData() {}
+	FClockworkLivesData() {}
 
-	FLivesGameTypeData(uint8 Lives) :
+	FClockworkLivesData(uint8 Lives) :
 		MaxLives(Lives),
 		CurrentLives(Lives)
 	{}
@@ -262,23 +199,6 @@ public:
 	//-------------------------
 
 public:
-	void Start()
-	{
-		StartTime = FDateTime::Now();
-	}
-
-
-	FTimespan GetDuration()
-	{
-		if (!bStarted)
-		{
-			return FTimespan::FromSeconds(0);
-		}
-
-		return FDateTime::Now() - StartTime;
-	}
-
-
 	uint8 GetMaxLives()
 	{
 		return MaxLives;
@@ -350,21 +270,17 @@ public:
 
 	// --------------- Scoring --------------- //
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
-	EGameType GameType { EGameType::Ticket };
-
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly)
-	int32 TotalLives{ 5 };
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (Bitmask, BitmaskEnum = "/Script/ClockworkTactics.EGameType"))
+	uint8 GameType { 7 };
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 CurrentLives{ 5 };
+	FClockworkTicketData TicketData;
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 TotalEnemies{ 15 };
+	FClockworkTimeData TimeData;
 
 	UPROPERTY(BlueprintReadOnly)
-	int32 EnemyDefeatCount{ 0 };
-
+	FClockworkLivesData LifeData;
 
 	// --------------- Debug --------------- //
 
@@ -383,4 +299,6 @@ public:
 	//-------------------------
 	// Public API
 	//-------------------------
+
+	void NotifyEntityDestruction(const FClockworkEntityDeathData& DeathData);
 };
