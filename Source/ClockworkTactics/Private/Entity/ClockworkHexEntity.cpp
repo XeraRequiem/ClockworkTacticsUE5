@@ -3,6 +3,7 @@
 
 // Game
 #include "Core/ClockworkGameInstance.h"
+#include "Core/ClockworkGameMode.h"
 #include "Core/ClockworkTactics.h"
 #include "Core/ClockworkWorldSubsystem.h"
 #include "Entity/ClockworkHexEntityFactory.h"
@@ -93,12 +94,17 @@ void AClockworkHexEntity::ApplyDamage(const FClockworkDamage& Damage)
 			OccupiedHex = nullptr;
 		}
 
-		DestroyEntity();
+		DestroyEntity(FClockworkEntityDeathData(GetFriendlyName(), Damage.Source->GetFriendlyName()));
 	}
 }
 
-void AClockworkHexEntity::DestroyEntity()
+void AClockworkHexEntity::DestroyEntity(const FClockworkEntityDeathData& DeathData)
 {
+	if (AClockworkGameMode* GameMode = Cast<AClockworkGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		GameMode->NotifyEntityDestruction(DeathData);
+	}
+
 	Destroy();
 }
 

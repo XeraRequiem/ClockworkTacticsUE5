@@ -3,6 +3,7 @@
 
 // Game
 #include "Core/ClockworkGameInstance.h"
+#include "Core/ClockworkGameMode.h"
 #include "Core/ClockworkTactics.h"
 #include "Core/ClockworkWorldSubsystem.h"
 #include "Entity/ClockworkHexEntityFactory.h"
@@ -134,7 +135,8 @@ void AClockworkHexUnit::ApplyDamage(const FClockworkDamage& Damage)
 		OccupiedHex = nullptr;
 	}
 
-	Destroy();
+	// To-Do: Analyze & Mitigate Damage. Trigger death id modified damage takes hp to 0
+	DestroyEntity(FClockworkEntityDeathData(GetFriendlyName(), Damage.Source->GetFriendlyName()));
 }
 
 

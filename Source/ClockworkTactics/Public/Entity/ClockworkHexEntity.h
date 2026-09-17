@@ -9,6 +9,9 @@
 // Plugin
 #include "Core/HexMath.h"
 
+// Game
+#include "Core/ClockworkStatics.h"
+
 // Generated
 #include "ClockworkHexEntity.generated.h"
 
@@ -159,7 +162,7 @@ public:
 	virtual void ApplyDamage(const FClockworkDamage& Damage);
 
 	UFUNCTION()
-	virtual void DestroyEntity();
+	virtual void DestroyEntity(const FClockworkEntityDeathData& DeathData);
 
 	// -------------------------
 	// --- Const API
