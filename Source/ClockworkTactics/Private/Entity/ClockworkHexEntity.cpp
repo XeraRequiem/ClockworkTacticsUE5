@@ -3,6 +3,7 @@
 
 // Game
 #include "Core/ClockworkGameInstance.h"
+#include "Core/ClockworkGameMode.h"
 #include "Core/ClockworkTactics.h"
 #include "Core/ClockworkWorldSubsystem.h"
 #include "Entity/ClockworkHexEntityFactory.h"
@@ -17,9 +18,9 @@ AClockworkHexEntity::AClockworkHexEntity() :
 	 Super()
 {
 	 FriendlyName = TEXT("Clockwork Hex Entity");
-
+	 
 	 PrimaryActorTick.bCanEverTick = true;
-	 PrimaryActorTick.bTickEvenWhenPaused = true;
+	 PrimaryActorTick.bTickEvenWhenPaused = false;
 	 PrimaryActorTick.TickGroup = TG_PrePhysics;
 }
 
@@ -80,6 +81,31 @@ bool AClockworkHexEntity::OccupyHex(AClockworkHex* Hex)
 	}
 
 	return false;
+}
+
+
+void AClockworkHexEntity::ApplyDamage(const FClockworkDamage& Damage)
+{
+	if (EntityData.bDestructible)
+	{
+		if (OccupiedHex != nullptr)
+		{
+			OccupiedHex->Vacate(this);
+			OccupiedHex = nullptr;
+		}
+
+		DestroyEntity(FClockworkEntityDeathData(GetFriendlyName(), Damage.Source->GetFriendlyName()));
+	}
+}
+
+void AClockworkHexEntity::DestroyEntity(const FClockworkEntityDeathData& DeathData)
+{
+	if (AClockworkGameMode* GameMode = Cast<AClockworkGameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		GameMode->NotifyEntityDestruction(DeathData);
+	}
+
+	Destroy();
 }
 
 

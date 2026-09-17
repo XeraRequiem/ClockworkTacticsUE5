@@ -116,6 +116,9 @@ public:
 
 	bool OccupyHex(AClockworkHex* Hex) override;
 
+	void ApplyDamage(const FClockworkDamage& Damage) override;
+
+
 
 	// -------------------------
 	// --- Const API

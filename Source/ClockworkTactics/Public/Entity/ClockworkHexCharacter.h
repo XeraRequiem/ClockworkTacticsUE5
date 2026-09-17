@@ -40,6 +40,9 @@ protected:
 	UPROPERTY()
 	uint16 CurrentExperience{ 0 };
 
+private:
+	float TimeSinceLastAttack{ 0.0f };
+
 
 	// -------------------------
 	// --- Constructors
@@ -62,6 +65,11 @@ public:
 	// -------------------------
 
 protected:
+	void AttemptAttackTargets();
+
+	void AttackTarget(AClockworkHexEntity* Target);
+
+
 	void UpdateTargetEntitiesInRange();
 
 
@@ -72,6 +80,15 @@ protected:
 
 	// -------------------------
 	// --- Implementation
+	// -------------------------
+
+protected:
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnAttackTarget(AClockworkHexEntity* Target);
+
+
+	// -------------------------
+	// --- Debug
 	// -------------------------
 
 private:

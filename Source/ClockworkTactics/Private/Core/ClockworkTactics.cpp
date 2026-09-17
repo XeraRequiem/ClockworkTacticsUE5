@@ -7,4 +7,6 @@ IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, ClockworkTactics, "Clockw
 
 DEFINE_LOG_CATEGORY(LogGrid);
 DEFINE_LOG_CATEGORY(LogHex);
+DEFINE_LOG_CATEGORY(LogEntity);
+DEFINE_LOG_CATEGORY(LogProjectile);
 DEFINE_LOG_CATEGORY(LogClockwork);

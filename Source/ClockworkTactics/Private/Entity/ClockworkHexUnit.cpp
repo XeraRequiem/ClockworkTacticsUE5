@@ -3,6 +3,7 @@
 
 // Game
 #include "Core/ClockworkGameInstance.h"
+#include "Core/ClockworkGameMode.h"
 #include "Core/ClockworkTactics.h"
 #include "Core/ClockworkWorldSubsystem.h"
 #include "Entity/ClockworkHexEntityFactory.h"
@@ -18,6 +19,8 @@ AClockworkHexUnit::AClockworkHexUnit() :
 	 Super()
 {
 	 FriendlyName = TEXT("Clockwork Hex Unit");
+
+	 EntityData = FClockworkHexEntityData{ .bDestructible = true };
 }
 
 
@@ -115,6 +118,25 @@ bool AClockworkHexUnit::OccupyHex(AClockworkHex* Hex)
 
 	UE_LOG(LogHex, Verbose, TEXT("%s Failed to Occupy Hex: Invalid Hex"), *FriendlyName);
 	return false;
+}
+
+
+void AClockworkHexUnit::ApplyDamage(const FClockworkDamage& Damage)
+{
+	if (ReservedHex != nullptr)
+	{
+		ReservedHex->Vacate(this);
+		ReservedHex = nullptr;
+	}
+
+	if (OccupiedHex != nullptr)
+	{
+		OccupiedHex->Vacate(this);
+		OccupiedHex = nullptr;
+	}
+
+	// To-Do: Analyze & Mitigate Damage. Trigger death id modified damage takes hp to 0
+	DestroyEntity(FClockworkEntityDeathData(GetFriendlyName(), Damage.Source->GetFriendlyName()));
 }
 
 

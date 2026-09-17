@@ -23,7 +23,7 @@ AClockworkHexCharacter::AClockworkHexCharacter() :
 {
 	 FriendlyName = TEXT("Clockwork Hex Character");
 
-	 UnitData = FClockworkHexUnitData{ .AttackRange = 1 };
+	 UnitData = FClockworkHexUnitData{ .AttackRange = 1, .AttackSpeed = 0.5f };
 }
 
 
@@ -41,12 +41,38 @@ void AClockworkHexCharacter::Tick(float dt)
 		FVector ForwardDirection = EntitiesWithinRange[0]->GetActorLocation() - GetActorLocation();
 		SetActorRotation(FRotator(0, ForwardDirection.Rotation().Yaw, 0));
 	}
+
+	TimeSinceLastAttack += dt;
+
+	if (TimeSinceLastAttack > 1.0f / UnitData.AttackSpeed)
+	{
+		AttemptAttackTargets();
+		TimeSinceLastAttack = 0.0f;
+	}
 }
 
 
 // -------------------------
 // --- Implementation
 // -------------------------
+
+void AClockworkHexCharacter::AttemptAttackTargets()
+{
+	if (EntitiesWithinRange.Num() > 0)
+	{
+		for (int i = 0; i < MaxTargets; ++i)
+		{
+			AttackTarget(EntitiesWithinRange[i]);
+		}
+	}
+}
+
+void AClockworkHexCharacter::AttackTarget(AClockworkHexEntity* Target)
+{
+	// To-Do: Implement Attack Logic (Damage Calculation, Effects, etc.)
+	OnAttackTarget(Target);
+}
+
 
 void AClockworkHexCharacter::UpdateTargetEntitiesInRange()
 {
