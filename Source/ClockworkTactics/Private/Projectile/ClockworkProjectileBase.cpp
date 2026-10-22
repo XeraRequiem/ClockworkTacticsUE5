@@ -42,14 +42,14 @@ void AClockworkProjectileBase::Tick(float DeltaTime)
 	// If the target entity is no longer valid, destroy the projectile
 	if (TargetEntity == nullptr)
 	{
-		DestroyProjectile(EClockworkProjectDestroyReason::InvalidTarget);
+		DestroyProjectile(EClockworkProjectileDestroyReason::InvalidTarget);
 		return;
 	}
 	
 	// If the projectile has exceeded its maximum travel time plus a buffer, destroy it
 	if (TravelTime > MaxTravelTime + TravelTimeBuffer)
 	{
-		DestroyProjectile(EClockworkProjectDestroyReason::Timeout);
+		DestroyProjectile(EClockworkProjectileDestroyReason::Timeout);
 		return;
 	}
 
@@ -81,7 +81,7 @@ void AClockworkProjectileBase::PostInitializeComponents()
 // --- Implementation
 // -------------------------
 
-void AClockworkProjectileBase::DestroyProjectile(EClockworkProjectDestroyReason Reason)
+void AClockworkProjectileBase::DestroyProjectile(EClockworkProjectileDestroyReason Reason)
 {
 	FString ReasonString;
 	UEnum::GetValueAsString(Reason).Split(TEXT("::"), nullptr, &ReasonString);
@@ -106,6 +106,6 @@ void AClockworkProjectileBase::OnCollisionBeginOverlap(UPrimitiveComponent* Over
 			Entity->ApplyDamage(Damage);
 		}
 
-		DestroyProjectile(EClockworkProjectDestroyReason::HitTarget);
+		DestroyProjectile(EClockworkProjectileDestroyReason::HitTarget);
 	}
 }

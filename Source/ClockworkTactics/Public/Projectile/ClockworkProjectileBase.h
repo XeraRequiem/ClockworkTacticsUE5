@@ -20,7 +20,7 @@
 // -------------------------
 
 UENUM(BlueprintType)	
-enum class EClockworkProjectDestroyReason : uint8
+enum class EClockworkProjectileDestroyReason : uint8
 {
 	None,
 	InvalidTarget,
@@ -100,7 +100,7 @@ public:
 	// -------------------------
 
 protected:
-	void DestroyProjectile(EClockworkProjectDestroyReason Reason);
+	virtual void DestroyProjectile(EClockworkProjectileDestroyReason Reason);
 
 
 	// -------------------------
@@ -109,5 +109,5 @@ protected:
 
 protected:
 	UFUNCTION()
-	void OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	virtual void OnCollisionBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };
