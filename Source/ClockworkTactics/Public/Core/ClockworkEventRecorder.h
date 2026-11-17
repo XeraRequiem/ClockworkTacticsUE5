@@ -14,15 +14,16 @@
 // Enums
 //-------------------------
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta = (Bitflags, UseEnumValuesAsMaskValuesInEditor = "true"))
 enum class EClockworkEventType : uint8
 {
-	None = 0			UMETA(DisplayName = "None"),
-	Death = 1		UMETA(DisplayName = "Death"),
-	Spawn = 2		UMETA(DisplayName = "Spawn"),
-	Attack = 4		UMETA(DisplayName = "Attack"),
-	AbilityUse = 5	UMETA(DisplayName = "Ability Use"),
+	None       = 0			UMETA(DisplayName = "None", Hidden),
+	Death      = 1 << 0	UMETA(DisplayName = "Death"),
+	Spawn      = 1 << 1	UMETA(DisplayName = "Spawn"),
+	Attack	  = 1 << 2	UMETA(DisplayName = "Attack"),
+	AbilityUse = 1 << 3	UMETA(DisplayName = "Ability Use"),
 };
+ENUM_CLASS_FLAGS(EClockworkEventType);
 
 
 //-------------------------
@@ -204,7 +205,7 @@ public:
 
 	bool IsEventType(EClockworkEventType Type) const
 	{
-		return EventType == Type;
+		return (EventType & Type) != EClockworkEventType::None;
 	};
 	
 	template <typename T>
