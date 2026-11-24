@@ -4,7 +4,8 @@
 #include "Containers/SortedSet.h"
 #include "CoreMinimal.h"
 
-// Game
+// Plugin
+#include "Core/HexMath.h"
 
 // Generated
 #include "ClockworkEventRecorder.generated.h"
@@ -23,6 +24,7 @@ enum class EClockworkEventType : uint8
 	Attack	  = 1 << 2	UMETA(DisplayName = "Attack"),
 	AbilityUse = 1 << 3	UMETA(DisplayName = "Ability Use"),
 };
+
 ENUM_CLASS_FLAGS(EClockworkEventType);
 
 
@@ -105,7 +107,7 @@ public:
 public:
 	FString ToString() const override
 	{
-		return SourceEntity + " dealt " + FString::SanitizeFloat(Damage) + " to " + TargetEntity;
+		return SourceEntity + " dealt " + FString::SanitizeFloat(Damage) + " damage to " + TargetEntity;
 	}
 };
 
@@ -121,19 +123,25 @@ struct FClockworkDeathEventData : public FClockworkEventData
 
 protected:
 	UPROPERTY(BlueprintReadOnly)
-	FString Entity;
-		
+	FString DeadEntity;
+
+	UPROPERTY(BlueprintReadOnly)
+	FString KillerEntity;
+
+
 	//-------------------------
 	// Constructors
 	//-------------------------
 
 public:
 	FClockworkDeathEventData() :
-		Entity{ "Entity" }
+		DeadEntity{ TEXT("DeadEntity") },
+		KillerEntity{ TEXT("KillerEntity") }
 	{}
 
-	FClockworkDeathEventData(FString InEntity) :
-		Entity{ InEntity }
+	FClockworkDeathEventData(const FString& InDeadEntity, const FString& InKillerEntity) :
+		DeadEntity{ InDeadEntity },
+		KillerEntity{ InKillerEntity }
 	{}
 
 
@@ -146,18 +154,69 @@ public:
 public:
 	FString ToString() const override
 	{
-		return Entity + "Died";
+		return KillerEntity + " killed " + DeadEntity;
 	}
 };
 
+USTRUCT(BlueprintType)
+struct FClockworkSpawnEventData : public FClockworkEventData
+{
+	GENERATED_BODY()
+
+
+	//-------------------------
+	// Member Variables
+	//-------------------------
+
+protected:
+	UPROPERTY(BlueprintReadOnly)
+	FString Entity;
+
+	UPROPERTY(BlueprintReadOnly)
+	FOffsetCoordinate SpawnLocation;
+
+
+	//-------------------------
+	// Constructors
+	//-------------------------
+
+public:
+	FClockworkSpawnEventData() :
+		Entity{ TEXT("Entity") },
+		SpawnLocation{ FOffsetCoordinate(0,0) }
+	{}
+
+	FClockworkSpawnEventData(const FString& InEntity, const FOffsetCoordinate& InSpawnLocation) :
+		Entity{ InEntity },
+		SpawnLocation{ InSpawnLocation }
+	{}
+
+
+	~FClockworkSpawnEventData() override {}
+
+	//-------------------------
+	// Const API
+	//-------------------------
+
+public:
+	FString ToString() const override
+	{
+		return Entity + " Spawned At " + SpawnLocation.ToString();
+	}
+};
+
+
+//-------------------------
+// Class
+//-------------------------
+
 // To-Do : Create Event Data Struct For Each Event Type
 //		X Create Sorted Array of Events in Event Recorder by Timestamp
-//		- Add event handler to record events in the game and add them to the event recorder
+//		X Add event handler to record events in the game and add them to the event recorder. I changed this to just allow the event recorder to be called directly.
 //		- Add functionality to filter events by type and/or time range
 // 	- Add functionality to export events to a file or external system
 //		- Add UI to visualize events history and statistics
 //		- Add functionality to replay events in the game for debugging or testing purposes
-
 
 USTRUCT(BlueprintType)
 struct FClockworkEvent
@@ -251,15 +310,7 @@ private:
 	//-------------------------
 
 public:
-	static UClockworkEventRecorder* GetEventRecorder()
-	{
-		if (EventRecorderInstance == nullptr)
-		{
-			EventRecorderInstance = NewObject<UClockworkEventRecorder>();
-		}
-
-		return EventRecorderInstance;
-	}
+	static UClockworkEventRecorder* GetEventRecorder();
 
 
 	//-------------------------
