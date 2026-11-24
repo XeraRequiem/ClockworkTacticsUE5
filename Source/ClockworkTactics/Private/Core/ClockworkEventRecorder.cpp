@@ -3,6 +3,21 @@
 
 
 //-------------------------
+// Static API
+//-------------------------
+
+UClockworkEventRecorder* UClockworkEventRecorder::GetEventRecorder()
+{
+	if (EventRecorderInstance == nullptr)
+	{
+		EventRecorderInstance = NewObject<UClockworkEventRecorder>();
+	}
+
+	return EventRecorderInstance;
+}
+
+
+//-------------------------
 // Constructor
 //-------------------------
 
