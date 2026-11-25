@@ -2,9 +2,12 @@
 #include "Grid/ClockworkEntitySpawnerComponent.h"
 
 // Game
+#include "Core/ClockworkEventRecorder.h"
+#include "Core/ClockworkGameInstance.h"
 #include "Core/ClockworkTactics.h"
 #include "Core/ClockworkWorldSubsystem.h"
 #include "Grid/ClockworkGrid.h"
+#include "Grid/ClockworkHex.h"
 
 
 // -------------------------
@@ -44,6 +47,9 @@ void UClockworkEntitySpawnerComponent::TickComponent(float DeltaTime, enum ELeve
 
 				if (OwningHex != nullptr)
 				{
+					FInstancedStruct EventData = FInstancedStruct::Make<FClockworkSpawnEventData>(EntityClassToSpawn->GetDefaultObject<AClockworkHexEntity>()->GetFriendlyName(), OwningHex->GetGridCoordinate());
+					OwningHex->GetGameInstance<UClockworkGameInstance>()->GetClockworkEventRecorder()->GenerateEvent(EClockworkEventType::Spawn, EventData);
+
 					HexGrid->SpawnEntityOnHex(EntityClassToSpawn, OwningHex);
 				}
 			}

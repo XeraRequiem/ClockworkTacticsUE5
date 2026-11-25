@@ -85,13 +85,11 @@ protected:
 
 	/**
 	 * Called for camera zoom in input
-	 * @param Rate	Scaled distance to move in/out
 	 */
 	void ZoomIn();
 
 	/**
 	 * Called for camera zoom out input
-	 * @param Rate	Scaled distance to move in/out
 	 */
 
 	void ZoomOut();
@@ -101,5 +99,12 @@ protected:
 	 * @param Rate	Scaled distance to move in/out
 	 */
 	void Zoom(float Value);
+
+
+	/**
+	*
+	*/
+
+	void OutputRecordedEvents();
 };
 

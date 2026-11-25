@@ -136,6 +136,18 @@ public:
 
 
 	// -------------------------
+	// --- Const API
+	// -------------------------
+
+public:
+	 virtual FString SerializeEntityData() const;
+
+	 AClockworkHex* GetOccupiedHex() const;
+
+	 FString GetFriendlyName() const;
+
+
+	// -------------------------
 	// --- API
 	// -------------------------
 
@@ -163,17 +175,6 @@ public:
 
 	UFUNCTION()
 	virtual void DestroyEntity(const FClockworkEntityDeathData& DeathData);
-
-	// -------------------------
-	// --- Const API
-	// -------------------------
-
-public:
-	 virtual FString SerializeEntityData() const;
-
-	 AClockworkHex* GetOccupiedHex() const;
-
-	 FString GetFriendlyName() const;
 
 
 	// -------------------------

@@ -5,6 +5,7 @@
 #include "Engine/GameInstance.h"
 
 // Game
+#include "Core/ClockworkEventRecorder.h"
 #include "Entity/ClockworkHexEntityFactory.h"
 
 // Generated
@@ -20,9 +21,13 @@ class UClockworkGameInstance : public UGameInstance
 	//-------------------------
 	// Member Variables
 	//-------------------------
-public:
+
+private:
 	UPROPERTY()
 	UClockworkHexEntityFactory* ClockworkEntityFactory;
+
+	UPROPERTY()
+	UClockworkEventRecorder* ClockworkEventRecorder;
 
 
 	//-------------------------
@@ -39,6 +44,8 @@ public:
 
 public:
 	UClockworkHexEntityFactory* GetClockworkHexEntityFactory() const { return ClockworkEntityFactory; }
+
+	UClockworkEventRecorder* GetClockworkEventRecorder() const { return ClockworkEventRecorder; }
 };
 
 

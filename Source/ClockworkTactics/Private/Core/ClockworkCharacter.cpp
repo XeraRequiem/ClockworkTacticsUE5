@@ -9,6 +9,11 @@
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
 
+// Game
+#include "Core/ClockworkEventRecorder.h"
+#include "Core/ClockworkGameInstance.h"
+#include "Core/ClockworkTactics.h"
+
 
 //-------------------------
 // Constructor
@@ -59,6 +64,8 @@ void AClockworkCharacter::SetupPlayerInputComponent(class UInputComponent* Playe
 	PlayerInputComponent->BindAxis("Move Right / Left", this, &AClockworkCharacter::MoveRight);
 	PlayerInputComponent->BindAction("Zoom In", EInputEvent::IE_Pressed, this, &AClockworkCharacter::ZoomIn);
 	PlayerInputComponent->BindAction("Zoom Out", EInputEvent::IE_Pressed, this, &AClockworkCharacter::ZoomOut);
+
+	PlayerInputComponent->BindAction("Space", EInputEvent::IE_Pressed, this, &AClockworkCharacter::OutputRecordedEvents);
 }
 
 
@@ -117,3 +124,13 @@ void AClockworkCharacter::Zoom(float Value)
 	}
 }
 
+
+void AClockworkCharacter::OutputRecordedEvents()
+{
+	UClockworkEventRecorder* EventRecorder = GetGameInstance<UClockworkGameInstance>()->GetClockworkEventRecorder();
+
+	FString RecordedEventsJson = EventRecorder->SerializeAllEvents();
+	UE_LOG(LogRecorder, VeryVerbose, TEXT("%s"), *RecordedEventsJson);
+
+	EventRecorder->OutputToFile();
+}
