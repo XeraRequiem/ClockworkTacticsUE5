@@ -3,6 +3,7 @@
 
 // Game
 #include "Core/ClockworkEventRecorder.h"
+#include "Core/ClockworkGameInstance.h"
 #include "Core/ClockworkTactics.h"
 #include "Core/ClockworkWorldSubsystem.h"
 #include "Grid/ClockworkGrid.h"
@@ -46,7 +47,9 @@ void UClockworkEntitySpawnerComponent::TickComponent(float DeltaTime, enum ELeve
 
 				if (OwningHex != nullptr)
 				{
-					UClockworkEventRecorder::GetEventRecorder()->GenerateEvent(EClockworkEventType::Spawn, FClockworkSpawnEventData(EntityClassToSpawn->GetDefaultObject<AClockworkHexEntity>()->GetFriendlyName(), OwningHex->GetGridCoordinate()));
+					FInstancedStruct EventData = FInstancedStruct::Make<FClockworkSpawnEventData>(EntityClassToSpawn->GetDefaultObject<AClockworkHexEntity>()->GetFriendlyName(), OwningHex->GetGridCoordinate());
+					OwningHex->GetGameInstance<UClockworkGameInstance>()->GetClockworkEventRecorder()->GenerateEvent(EClockworkEventType::Spawn, EventData);
+
 					HexGrid->SpawnEntityOnHex(EntityClassToSpawn, OwningHex);
 				}
 			}

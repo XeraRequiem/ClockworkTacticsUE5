@@ -3,6 +3,8 @@
 // Engine
 #include "Containers/SortedSet.h"
 #include "CoreMinimal.h"
+#include "JsonObjectConverter.h"
+#include "StructUtils/InstancedStruct.h"
 
 // Plugin
 #include "Core/HexMath.h"
@@ -57,6 +59,11 @@ public:
 	{
 		return FString("Base Event Data");
 	}
+
+	virtual FString ToJson() const
+	{
+		return TEXT("NOPE");
+	}
 };
 
 USTRUCT(BlueprintType)
@@ -91,6 +98,9 @@ public:
 		Damage{ 0.0f }
 	{}
 
+	FClockworkAttackEventData(const FClockworkEventData& Other)
+	{}
+
 	FClockworkAttackEventData(FString Source, FString Target, float Value) :
 		SourceEntity{ Source },
 		TargetEntity{ Target },
@@ -98,7 +108,7 @@ public:
 	{}
 
 
-	~FClockworkAttackEventData() override {}
+	virtual ~FClockworkAttackEventData() {}
 
 	//-------------------------
 	// Const API
@@ -108,6 +118,14 @@ public:
 	FString ToString() const override
 	{
 		return SourceEntity + " dealt " + FString::SanitizeFloat(Damage) + " damage to " + TargetEntity;
+	}
+
+	FString ToJson() const override
+	{
+		FString Json;
+		FJsonObjectConverter::UStructToJsonObjectString(StaticStruct(), this, Json);
+
+		return Json;
 	}
 };
 
@@ -145,7 +163,7 @@ public:
 	{}
 
 
-	~FClockworkDeathEventData() override {}
+	virtual ~FClockworkDeathEventData() {}
 
 	//-------------------------
 	// Const API
@@ -155,6 +173,14 @@ public:
 	FString ToString() const override
 	{
 		return KillerEntity + " killed " + DeadEntity;
+	}
+
+	FString ToJson() const override
+	{
+		FString Json;
+		FJsonObjectConverter::UStructToJsonObjectString(StaticStruct(), this, Json);
+
+		return Json;
 	}
 };
 
@@ -192,7 +218,7 @@ public:
 	{}
 
 
-	~FClockworkSpawnEventData() override {}
+	virtual ~FClockworkSpawnEventData() {}
 
 	//-------------------------
 	// Const API
@@ -203,20 +229,16 @@ public:
 	{
 		return Entity + " Spawned At " + SpawnLocation.ToString();
 	}
+
+	FString ToJson() const override
+	{
+		FString Json;
+		FJsonObjectConverter::UStructToJsonObjectString(StaticStruct(), this, Json);
+
+		return Json;
+	}
 };
 
-
-//-------------------------
-// Class
-//-------------------------
-
-// To-Do : Create Event Data Struct For Each Event Type
-//		X Create Sorted Array of Events in Event Recorder by Timestamp
-//		X Add event handler to record events in the game and add them to the event recorder. I changed this to just allow the event recorder to be called directly.
-//		- Add functionality to filter events by type and/or time range
-// 	- Add functionality to export events to a file or external system
-//		- Add UI to visualize events history and statistics
-//		- Add functionality to replay events in the game for debugging or testing purposes
 
 USTRUCT(BlueprintType)
 struct FClockworkEvent
@@ -239,7 +261,7 @@ protected:
 	EClockworkEventType EventType;
 
 	UPROPERTY(BlueprintReadOnly)
-	FClockworkEventData EventData;
+	FInstancedStruct EventData;
 
 
 	//-------------------------
@@ -249,11 +271,22 @@ protected:
 public:
 	FClockworkEvent() {}
 
-	FClockworkEvent(FDateTime Time, EClockworkEventType Type, FClockworkEventData Data) :
+	FClockworkEvent(FDateTime Time, EClockworkEventType Type, FInstancedStruct& Data) :
+		EventId(FGuid::NewGuid()),
 		EventTime(Time),
 		EventType(Type),
 		EventData(Data)
 	{}
+
+
+	//-------------------------
+	// Operators
+	//-------------------------
+
+	bool operator<(const FClockworkEvent& Other) const
+	{
+		return EventTime < Other.EventTime;
+	}
 
 
 	//-------------------------
@@ -266,23 +299,44 @@ public:
 	{
 		return (EventType & Type) != EClockworkEventType::None;
 	};
-	
-	template <typename T>
-	T GetEventData() const
-	{
-		return static_cast<T>(EventData);
-	}
 
 	FDateTime GetEventTime() const
 	{
 		return EventTime;
 	}
-
-	// Comparison Operators
-
-	bool operator<(const FClockworkEvent& Other) const
+	
+	
+	FClockworkEventData GetEventData() const
 	{
-		return EventTime < Other.EventTime;
+		return EventData.Get<FClockworkEventData>();
+	}
+	
+	template <typename T>
+	T GetEventDataAs() const
+	{
+		return EventData.Get<T>();
+	}
+
+	// Serialization
+
+	FString ToJson() const
+	{
+		FString Json;
+		FJsonObjectConverter::UStructToJsonObjectString(FClockworkEvent::StaticStruct(), this, Json);
+
+		return Json;
+	}
+
+
+	//-------------------------
+	// API
+	//-------------------------
+
+public:
+	void FromJson(const FString& json)
+	{
+		// To-Do: Need to check that this works the way I think it does
+		FJsonObjectConverter::JsonObjectStringToUStruct(json, this);
 	}
 };
 
@@ -291,26 +345,17 @@ public:
 // Classes
 //-------------------------
 
+// To-Do : Create Event Data Struct For Each Event Type
+//		X Create Sorted Array of Events in Event Recorder by Timestamp
+//		X Add event handler to record events in the game and add them to the event recorder. I changed this to just allow the event recorder to be called directly.
+//		X Add functionality to filter events by type and/or time range
+// 	- Add functionality to export events to a file or external system
+//		- Add UI to visualize events history and statistics
+//		- Add functionality to replay events in the game for debugging or testing purposes
 UCLASS(minimalapi)
 class UClockworkEventRecorder : public UObject
 {
 	GENERATED_BODY()
-
-
-	//-------------------------
-	// Static Variables
-	//-------------------------
-
-private:
-	static UClockworkEventRecorder* EventRecorderInstance;
-
-
-	//-------------------------
-	// Static API
-	//-------------------------
-
-public:
-	static UClockworkEventRecorder* GetEventRecorder();
 
 
 	//-------------------------
@@ -327,7 +372,7 @@ protected:
 	// Constructor
 	//-------------------------
 
-private:
+public:
 	UClockworkEventRecorder();
 
 
@@ -335,6 +380,7 @@ private:
 	// Const API
 	//-------------------------
 
+public:
 	UFUNCTION(BlueprintCallable, Category = "Event Recorder")
 	TArray<FClockworkEvent> GetRecordedEvents() const;
 
@@ -348,11 +394,18 @@ private:
 	TArray<FClockworkEvent> GetRecordedEventsByTypeWithinRange(EClockworkEventType EventType, FDateTime StartTime, FDateTime EndTime) const;
 
 
+	UFUNCTION(BlueprintCallable, Category = "Event Recorder", meta=(DisplayName = "SerializeAllEvents"))
+	FString SerializeAllEvents() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Event Recorder", meta=(DisplayName = "SerializeEvents"))
+	FString SerializeEvents(const TArray<FClockworkEvent>& Events) const;
+
+
 	//-------------------------
 	// API
 	//-------------------------
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Event Recorder")
-	void GenerateEvent(EClockworkEventType EventType, FClockworkEventData Data);
+	void GenerateEvent(EClockworkEventType EventType, FInstancedStruct Data);
 };

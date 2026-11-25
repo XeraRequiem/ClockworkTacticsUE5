@@ -87,8 +87,9 @@ bool AClockworkHexEntity::OccupyHex(AClockworkHex* Hex)
 
 void AClockworkHexEntity::ApplyDamage(const FClockworkDamage& Damage)
 {
-	UClockworkEventRecorder* EventRecorder = UClockworkEventRecorder::GetEventRecorder();
-	EventRecorder->GenerateEvent(EClockworkEventType::Attack, FClockworkAttackEventData(GetFriendlyName(), Damage.Source->GetFriendlyName(), Damage.Damage));
+	// Record Event
+	FInstancedStruct EventData = FInstancedStruct::Make<FClockworkAttackEventData>(FClockworkAttackEventData(GetFriendlyName(), Damage.Source->GetFriendlyName(), Damage.Damage));
+	GetGameInstance<UClockworkGameInstance>()->GetClockworkEventRecorder()->GenerateEvent(EClockworkEventType::Attack, EventData);
 
 	if (EntityData.bDestructible)
 	{
@@ -106,7 +107,11 @@ void AClockworkHexEntity::DestroyEntity(const FClockworkEntityDeathData& DeathDa
 {
 	if (AClockworkGameMode* GameMode = Cast<AClockworkGameMode>(GetWorld()->GetAuthGameMode()))
 	{
-		UClockworkEventRecorder::GetEventRecorder()->GenerateEvent(EClockworkEventType::Death, FClockworkDeathEventData(DeathData.DeadEntity, DeathData.KillerEntity));
+		// Record Event
+		FInstancedStruct EventData = FInstancedStruct::Make<FClockworkDeathEventData>(FClockworkDeathEventData(DeathData.DeadEntity, DeathData.KillerEntity));
+		GetGameInstance<UClockworkGameInstance>()->GetClockworkEventRecorder()->GenerateEvent(EClockworkEventType::Death, EventData);
+
+		// Notify GameMode to update Game State
 		GameMode->NotifyEntityDestruction(DeathData);
 	}
 

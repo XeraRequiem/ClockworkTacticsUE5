@@ -1,20 +1,8 @@
 // Required
 #include "Core/ClockworkEventRecorder.h"
 
-
-//-------------------------
-// Static API
-//-------------------------
-
-UClockworkEventRecorder* UClockworkEventRecorder::GetEventRecorder()
-{
-	if (EventRecorderInstance == nullptr)
-	{
-		EventRecorderInstance = NewObject<UClockworkEventRecorder>();
-	}
-
-	return EventRecorderInstance;
-}
+// Game
+#include "Core/ClockworkTactics.h"
 
 
 //-------------------------
@@ -141,11 +129,52 @@ TArray<FClockworkEvent> UClockworkEventRecorder::GetRecordedEventsByTypeWithinRa
 }
 
 
+FString UClockworkEventRecorder::SerializeAllEvents() const
+{
+
+	FString Json = TEXT("{ Events: [");
+
+	for (int i = 0; i < RecordedEvents.Num(); ++i)
+	{
+		// Serialize each event to JSON and append it to the output string
+		Json += RecordedEvents[i].ToJson();
+
+		// Add a comma between events, but not after the last one
+		if (i < RecordedEvents.Num() - 1)
+		{
+			Json += TEXT(",");
+		}
+	}
+
+	Json += TEXT("]}");
+
+	return Json;
+}
+
+FString UClockworkEventRecorder::SerializeEvents(const TArray<FClockworkEvent>& Events) const
+{
+	FString Json = TEXT("{");
+	for (const FClockworkEvent& Event : Events)
+	{
+		Json += Event.ToJson();
+		Json += TEXT(",");
+	}
+
+	Json += TEXT("}");
+
+	return Json;
+}
+
+
 //-------------------------
 // API
 //-------------------------
 
-void UClockworkEventRecorder::GenerateEvent(EClockworkEventType EventType, FClockworkEventData Data)
+void UClockworkEventRecorder::GenerateEvent(EClockworkEventType EventType, FInstancedStruct Data)
 {
-	RecordedEvents.Add(FClockworkEvent(FDateTime::Now(), EventType, Data));
+	FClockworkEvent Event(FDateTime::Now(), EventType, Data);
+
+	UE_LOG(LogRecorder, VeryVerbose, TEXT("Generated Event: %s"), *Event.GetEventData().ToString());
+
+	RecordedEvents.Add(Event);
 }
