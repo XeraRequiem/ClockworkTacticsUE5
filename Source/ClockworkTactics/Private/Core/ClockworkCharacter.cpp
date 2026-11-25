@@ -127,6 +127,10 @@ void AClockworkCharacter::Zoom(float Value)
 
 void AClockworkCharacter::OutputRecordedEvents()
 {
-	FString RecordedEventsJson = GetGameInstance<UClockworkGameInstance>()->GetClockworkEventRecorder()->SerializeAllEvents();
+	UClockworkEventRecorder* EventRecorder = GetGameInstance<UClockworkGameInstance>()->GetClockworkEventRecorder();
+
+	FString RecordedEventsJson = EventRecorder->SerializeAllEvents();
 	UE_LOG(LogRecorder, VeryVerbose, TEXT("%s"), *RecordedEventsJson);
+
+	EventRecorder->OutputToFile();
 }

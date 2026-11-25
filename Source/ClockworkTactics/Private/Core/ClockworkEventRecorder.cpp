@@ -178,3 +178,55 @@ void UClockworkEventRecorder::GenerateEvent(EClockworkEventType EventType, FInst
 
 	RecordedEvents.Add(Event);
 }
+
+void UClockworkEventRecorder::GenerateEventsFromFile(const FString& FileName)
+{
+	FString JsonPath = FPaths::Combine(BaseFilePath, FileName);
+
+	FString EventsJson;
+	if (FFileHelper::LoadFileToString(EventsJson, *JsonPath))
+	{
+		FClockworkEvents Events = FClockworkEvents::FromJson(EventsJson);
+		if (Events.Events.Num() > 0)
+		{
+			ClearEvents();
+			RecordedEvents = Events.Events;
+		}
+		else
+		{
+			UE_LOG(LogRecorder, Warning, TEXT("No events found in file: %s"), *FileName);
+		}
+	}
+	else
+	{
+		UE_LOG(LogRecorder, Error, TEXT("Failed to load events from file: %s"), *FileName);
+	}
+}
+
+void UClockworkEventRecorder::ClearEvents()
+{
+	RecordedEvents.Empty();
+}
+
+
+void UClockworkEventRecorder::OutputToFile(bool bClearEvents)
+{
+	FString SerializedEvents = SerializeAllEvents();
+
+	// Note: The file name should be changed later to indicate the start time of the recording and/or the game mode type.
+	FString FilePath = FPaths::Combine(BaseFilePath, FDateTime::Now().ToString() + TEXT(".json"));
+
+	if (FFileHelper::SaveStringToFile(SerializedEvents, *FilePath))
+	{
+		UE_LOG(LogRecorder, Log, TEXT("Successfully saved events to file: %s"), *FilePath);
+	}
+	else
+	{
+		UE_LOG(LogRecorder, Error, TEXT("Failed to save events to file: %s"), *FilePath);
+	}
+
+	if (bClearEvents)
+	{
+		ClearEvents();
+	}
+}

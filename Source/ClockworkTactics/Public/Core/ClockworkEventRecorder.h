@@ -340,6 +340,24 @@ public:
 	}
 };
 
+USTRUCT(BlueprintType)
+struct FClockworkEvents
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FClockworkEvent> Events;
+
+
+	static FClockworkEvents FromJson(const FString& json)
+	{
+		FClockworkEvents Result;
+		FJsonObjectConverter::JsonObjectStringToUStruct(json, &Result);
+		
+		return Result;
+	}
+};
+
 
 //-------------------------
 // Classes
@@ -352,6 +370,7 @@ public:
 // 	- Add functionality to export events to a file or external system
 //		- Add UI to visualize events history and statistics
 //		- Add functionality to replay events in the game for debugging or testing purposes
+
 UCLASS(minimalapi)
 class UClockworkEventRecorder : public UObject
 {
@@ -366,6 +385,9 @@ protected:
 	// Note: Assumed chronologically sorted based on when events are added to the array.
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FClockworkEvent> RecordedEvents;
+	
+	UPROPERTY(BlueprintReadOnly)
+	FString BaseFilePath = FPaths::Combine(FPaths::ProjectSavedDir(), TEXT("EventLogs"));
 
 
 	//-------------------------
@@ -394,12 +416,12 @@ public:
 	TArray<FClockworkEvent> GetRecordedEventsByTypeWithinRange(EClockworkEventType EventType, FDateTime StartTime, FDateTime EndTime) const;
 
 
-	UFUNCTION(BlueprintCallable, Category = "Event Recorder", meta=(DisplayName = "SerializeAllEvents"))
+	UFUNCTION(BlueprintCallable, Category = "Event Recorder")
 	FString SerializeAllEvents() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Event Recorder", meta=(DisplayName = "SerializeEvents"))
+	UFUNCTION(BlueprintCallable, Category = "Event Recorder")
 	FString SerializeEvents(const TArray<FClockworkEvent>& Events) const;
-
+			
 
 	//-------------------------
 	// API
@@ -408,4 +430,14 @@ public:
 public:
 	UFUNCTION(BlueprintCallable, Category = "Event Recorder")
 	void GenerateEvent(EClockworkEventType EventType, FInstancedStruct Data);
+
+	UFUNCTION(BlueprintCallable, Category = "Event Recorder")
+	void GenerateEventsFromFile(const FString& FileName);
+
+	UFUNCTION(BlueprintCallable, Category = "Event Recorder")
+	void ClearEvents();
+
+
+	UFUNCTION(BlueprintCallable, Category = "Event Recorder")
+	void OutputToFile(bool bClearEvents = true);
 };
